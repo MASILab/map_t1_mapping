@@ -3,6 +3,8 @@
 # See https://github.com/Gilles86/pymp2rage/blob/master/notebooks/MP2RAGE%20and%20T1%20fitting.ipynb
 import os
 import json
+import matplotlib.pyplot as plt
+from nilearn import plotting
 import nibabel as nib
 import pymp2rage
 
@@ -28,11 +30,11 @@ inv2 = nib.load(inv2_path)
 MPRAGE_tr = inv1_json['RepetitionTime']
 invtimesAB = [inv1_json['InversionTime'], inv2_json['InversionTime']]
 flipangleABdegree =[inv1_json['FlipAngle'], inv2_json['FlipAngle']]
-nZslices = 150
-FLASH_tr=[0.0062, 0.03]
+nZslices = inv1.header['dim'][3]
+FLASH_tr=0.00207 # not correct
 sequence = 'normal'
-inversion_efficiency = 0.63
-B0 = 7
+inversion_efficiency = 0.96 # estimate
+B0 = inv1_json['MagneticFieldStrength']
 
 # Create MP2RAGE fitter
 fitter = pymp2rage.MP2RAGE(MPRAGE_tr = MPRAGE_tr,
@@ -43,5 +45,13 @@ fitter = pymp2rage.MP2RAGE(MPRAGE_tr = MPRAGE_tr,
                            sequence = sequence,
                            inversion_efficiency = inversion_efficiency,
                            B0 = B0,
-                           inv1_combined = inv1,
-                           inv2_combined = inv2)
+                           inv1 = inv1,
+                           inv2 = inv2)
+
+# Create T1 map
+t1_map = fitter.t1
+
+# Plot it
+fig = plt.figure(figsize=(24,6))
+plotting.plot_anat(fitter.t1, figure=fig, cut_coords=(0,0,0))
+plotting.show()
