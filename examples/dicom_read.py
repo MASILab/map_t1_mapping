@@ -10,6 +10,6 @@ dicom_file = glob.glob(dicom_path)
 ds = dcmread(dicom_file[0])
 
 # Print info to file
-output_path = os.path.join('outputs', 'dicom_info.txt')
+output_path = os.path.join(os.path.dirname('.'), 'outputs', 'dicom_info.txt')
 with open(output_path, 'w') as f:
     f.write(str(ds))
