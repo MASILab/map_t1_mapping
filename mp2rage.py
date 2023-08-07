@@ -55,10 +55,11 @@ fitter = pymp2rage.MP2RAGE(MPRAGE_tr = MPRAGE_tr,
 
 # Plot T1 map
 t1map = fitter.t1map
+t1map_s = nib.nifti1.Nifti1Image(t1map.dataobj/1000, t1map.affine)
 fig = plt.figure(figsize=(24,6))
-plotting.plot_anat(t1map, figure=fig, cut_coords=(0,0,0))
+plotting.plot_anat(t1map_s, figure=fig, cut_coords=(0,0,0), colorbar=True)
 plotting.show()
 
 # Save
 output_path = os.path.join('outputs', f'{subject}_{scan_num}_t1map.nii.gz')
-nib.save(t1map, output_path)
+nib.save(t1map_s, output_path)
