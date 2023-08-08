@@ -145,3 +145,5 @@ cython_debug/
 .nfs*
 outputs/*
 .vscode
+*.pyc
+mp2rage/__pycache__/*

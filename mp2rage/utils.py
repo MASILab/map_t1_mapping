@@ -72,3 +72,14 @@ def MP2RAGE(GRE1, GRE2):
     MP2RAGE: ndarray
         First gradient echo block
     """
+
+    # Check for complex data
+    if (np.iscomplexobj(GRE1) and np.iscomplexobj(GRE2)):
+        MP2RAGE = np.real(np.conj(GRE1)*GRE2/(np.power(np.abs(GRE1), 2) + np.power(np.abs(GRE2), 2)))
+    else:
+        MP2RAGE = GRE1*GRE2/(GRE1**2 + GRE2**2)
+
+    # Replace NaN with 0
+    MP2RAGE = np.nan_to_num(MP2RAGE)
+
+    return MP2RAGE
