@@ -30,7 +30,7 @@ inv1_data = inv1_mag*np.exp(1j*inv1_ph)
 inv2_data = inv2_mag*np.exp(1j*inv2_ph)
 
 # Calculate MP2RAGE image
-mp2rage = MP2RAGE(inv1_data, inv2_data)
+mp2rage = MP2RAGE(inv1_data, inv2_data)*2048 + 4096
 mp2rage_nifti = nib.nifti1.Nifti1Image(mp2rage, inv1.affine)
 
 # Save to file
