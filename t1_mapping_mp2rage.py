@@ -52,12 +52,12 @@ fitter = pymp2rage.MP2RAGE(MPRAGE_tr = MPRAGE_tr,
                            inv2 = inv2,
                            inv2ph = inv2_ph)
 
-# Plot T1 map
+# Save T1 map
 t1map = fitter.t1map
-fig = plt.figure(figsize=(24,6))
-plotting.plot_anat(t1map, figure=fig, cut_coords=(0,0,0), colorbar=True)
-plotting.show()
-
-# Save
 output_path = os.path.join('outputs', f'{subject}_{scan_num}_t1map.nii.gz')
 nib.save(t1map, output_path)
+
+# Save MP2RAGE image
+t1w_uni = fitter.t1w_uni
+output_path = os.path.join('outputs', f'{subject}_{scan_num}_t1w_uni.nii.gz')
+nib.save(t1w_uni, output_path)

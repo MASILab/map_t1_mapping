@@ -8,11 +8,12 @@ from mp2rage.utils import MP2RAGE
 
 # Load dataset paths
 subject = '334236'
-scan = '501-x-WIPMP2RAGE_0p7_TFEprepulsecardiacSENSE-x-WIPMP2RAGE_0p7_TFEprepulsecardiacSENSE'
-scan_num = '501'
-scan_times = ['810', '3010']
+scan = '601-x-WIPMP2RAGE_1mm_1sTI_TFEprepulsecardiacSENSE-x-WIPMP2RAGE_1mm_1sTI_TFEprepulsecardiacSENSE'
+scan_num = '601'
+scan_times = ['1010', '3310']
 dataset_path = '/nfs/masi/saundam1/Outputs/MP2RAGE_converted/'
 subject_path = os.path.join(dataset_path, subject, scan)
+
 # Load NIFTI files
 inv1 = nib.load(os.path.join(subject_path, f'{scan_num}_t{scan_times[0]}.nii'))
 inv1_ph = nib.load(os.path.join(subject_path, f'{scan_num}_ph_t{scan_times[0]}.nii'))
@@ -29,8 +30,8 @@ inv2_ph = inv2_ph.get_fdata()
 inv1_data = inv1_mag*np.exp(1j*inv1_ph)
 inv2_data = inv2_mag*np.exp(1j*inv2_ph)
 
-# Calculate MP2RAGE image
-mp2rage = MP2RAGE(inv1_data, inv2_data)*2048 + 4096
+# Calculate MP2RAGE image (scale to same as pymp2rage)
+mp2rage = MP2RAGE(inv1_data, inv2_data)
 mp2rage_nifti = nib.nifti1.Nifti1Image(mp2rage, inv1.affine)
 
 # Save to file

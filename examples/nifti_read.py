@@ -1,21 +1,40 @@
-# Getting started with NiBabel
-# Based on https://nipy.org/nibabel/gettingstarted.html
+# Read NIFTI
 
 import os
-import numpy as np
+import glob
+import json
 import nibabel as nib
 from nibabel.testing import data_path
 
-# Load example file from NiBabel
-example_file = '/nfs/masi/saundam1/Datasets/MP2RAGE/336195/336195/MP2RAGE-x-336195-x-336195-x-mp2rage_v2_1-x-a0d72a85-bda8-490d-a558-129ae2a86c83/MP2RAGE/mp2rage.nii.gz'
-img = nib.load(example_file)
+# Load folder
+subject = '334264'
+scan = '401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE'
+scan_num = '401'
+dataset_path = '/nfs/masi/saundam1/Outputs/MP2RAGE_converted/'
+subject_path = os.path.join(dataset_path, subject, scan)
 
-# Print some information about the data
-print(f'Shape: {img.shape}')
-print(f'Data type: {img.get_data_dtype()}')
-print(f'Affine transformation: \n{img.affine}')
+# Load NIFTI 
+nifti_path = os.path.join(subject_path, '401_ph_t3310.nii')
+nifti_file = glob.glob(nifti_path)
+img = nib.load(nifti_file[0])
 
-# Load header
-hdr = img.header
-print(hdr)
-print(f'Units: {hdr.get_xyzt_units()}')
+# Load JSON
+json_path = os.path.join(subject_path, '401_ph_t3310.json')
+json_file = glob.glob(json_path)
+with open(json_file[0], 'r') as f:
+    json = json.load(f)
+
+# Print info to file
+# output_path = os.path.join(os.path.dirname('.'), 'outputs', f'{subject}_{scan_num}_nifti_info.txt')
+# with open(output_path, 'w') as f:
+#     f.write(str(img.header))
+
+# Set slope and intercept
+scl_slope = 1/json["PhilipsScaleSlope"]
+scl_inter = json["PhilipsRescaleIntercept"]/(json["PhilipsScaleSlope"]*json["PhilipsRescaleSlope"])
+print(f'Setting slope to {scl_slope} and intercept to {scl_inter}')
+img.header.set_slope_inter(scl_slope, scl_inter)
+
+# Save file
+output_path = os.path.join('outputs', f'{subject}_{scan_num}_nifti_scaled.nii.gz')
+nib.save(img, output_path)
