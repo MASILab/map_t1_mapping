@@ -7,9 +7,9 @@ import nibabel as nib
 from mp2rage.utils import MP2RAGE
 
 # Load dataset paths
-subject = '334236'
-scan = '601-x-WIPMP2RAGE_1mm_1sTI_TFEprepulsecardiacSENSE-x-WIPMP2RAGE_1mm_1sTI_TFEprepulsecardiacSENSE'
-scan_num = '601'
+subject = '334264'
+scan = '401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE'
+scan_num = '401'
 scan_times = ['1010', '3310']
 dataset_path = '/nfs/masi/saundam1/Outputs/MP2RAGE_converted/'
 subject_path = os.path.join(dataset_path, subject, scan)
@@ -25,6 +25,12 @@ inv1_mag = inv1.get_fdata()
 inv1_ph = inv1_ph.get_fdata()
 inv2_mag = inv2.get_fdata()
 inv2_ph = inv2_ph.get_fdata()
+
+# Print maxes and mins for sanity
+print(nib.volumeutils.finite_range(inv1_mag))
+print(nib.volumeutils.finite_range(inv1_ph))
+print(nib.volumeutils.finite_range(inv2_mag))
+print(nib.volumeutils.finite_range(inv2_ph))
 
 # Create combined complex data
 inv1_data = inv1_mag*np.exp(1j*inv1_ph)
