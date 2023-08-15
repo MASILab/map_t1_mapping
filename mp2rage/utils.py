@@ -73,13 +73,23 @@ def MP2RAGE(GRE1, GRE2):
         First gradient echo block
     """
 
-    # Check for complex data
-    if (np.iscomplexobj(GRE1) and np.iscomplexobj(GRE2)):
-        MP2RAGE = np.real(np.conj(GRE1)*GRE2/(np.power(np.abs(GRE1), 2) + np.power(np.abs(GRE2), 2)))
-    else:
-        MP2RAGE = GRE1*GRE2/(GRE1**2 + GRE2**2)
+    # Check if data needs to be scaled to [-0.5, 0.5]
+    # print(np.min(GRE1), np.max(GRE1))
+    # print(np.min(GRE2), np.max(GRE2))
+    # if ((np.max(np.abs(GRE1)) > 0.51 or np.max(np.abs(GRE2)) > 0.51) or (np.min(np.abs(GRE1) < 0.0))):
+    #     # print('Scaling data')
+    #     # GRE1 = (GRE1 - np.max(GRE1)/2) / np.max(GRE1)
+    #     # GRE2 = (GRE2 - np.max(GRE2)/2) / np.max(GRE2)
+    #     # print(np.min(GRE1), np.max(GRE1))
+    #     # print(np.min(GRE2), np.max(GRE2))
+    #     pass
+
+    MP2RAGE = np.real((np.conj(GRE1)*GRE2))/(np.abs(GRE1)**2 + np.abs(GRE2)**2)
+    # MP2RAGE = (GRE1*GRE2)/(GRE1**2 + GRE2**2)
 
     # Replace NaN with 0
     MP2RAGE = np.nan_to_num(MP2RAGE)
+
+    # print(np.min(MP2RAGE), np.max(MP2RAGE))
 
     return MP2RAGE
