@@ -25,7 +25,7 @@ def GRE(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=
     MPRAGE_TR : arraylike, optional, default=6
         Time from one pulse to another in s
     eff : arraylike, optional, default=0.96
-        Pulse efficiency of scanner
+        Inversion pulse efficiency
 
     Returns
     -------
@@ -56,7 +56,7 @@ def GRE(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=
     
     return GRE1, GRE2
 
-def MP2RAGE(GRE1, GRE2):
+def MP2RAGE(GRE1, GRE2, robust=False, beta=10):
     """
     Returns the MP2RAGE image formed by two gradient echo blocks.
 
@@ -66,30 +66,60 @@ def MP2RAGE(GRE1, GRE2):
         The first gradient echo block
     GRE2 : arraylike
         The second gradient echo block
+    robust : Boolean, optional, default=False
+        Uses robust MP2RAGE calculation (see https://doi.org/10.1371/journal.pone.0099676)
+    beta : float, optional, default=0.01
+        Offset parameter for robust MP2RAGE calculation
 
     Returns
     -------
-    MP2RAGE: ndarray
+    MP2RAGE : ndarray
         First gradient echo block
     """
-
-    # Check if data needs to be scaled to [-0.5, 0.5]
-    # print(np.min(GRE1), np.max(GRE1))
-    # print(np.min(GRE2), np.max(GRE2))
-    # if ((np.max(np.abs(GRE1)) > 0.51 or np.max(np.abs(GRE2)) > 0.51) or (np.min(np.abs(GRE1) < 0.0))):
-    #     # print('Scaling data')
-    #     # GRE1 = (GRE1 - np.max(GRE1)/2) / np.max(GRE1)
-    #     # GRE2 = (GRE2 - np.max(GRE2)/2) / np.max(GRE2)
-    #     # print(np.min(GRE1), np.max(GRE1))
-    #     # print(np.min(GRE2), np.max(GRE2))
-    #     pass
-
-    MP2RAGE = np.real((np.conj(GRE1)*GRE2))/(np.abs(GRE1)**2 + np.abs(GRE2)**2)
-    # MP2RAGE = (GRE1*GRE2)/(GRE1**2 + GRE2**2)
+    
+    # Calculate MP2RAGE 
+    if robust: 
+        MP2RAGE = np.real((np.conj(GRE1)*GRE2) - beta)/(np.abs(GRE1)**2 + np.abs(GRE2)**2 + 2*beta)
+    else:
+        MP2RAGE = np.real((np.conj(GRE1)*GRE2))/(np.abs(GRE1)**2 + np.abs(GRE2)**2)
 
     # Replace NaN with 0
     MP2RAGE = np.nan_to_num(MP2RAGE)
 
-    # print(np.min(MP2RAGE), np.max(MP2RAGE))
-
     return MP2RAGE
+
+def t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
+    """
+    Returns the values for the T1 map calculated from an MP2RAGE sequence.
+
+    Parameters
+    ---------
+    GRE1 : arraylike
+        The first gradient echo block
+    GRE2 : arraylike
+        The second gradient echo block
+    TA : float
+        Time from initial pulse to beginning of first GRE block in s
+    TB : float
+        Time from end of first GRE block to beginning of second block in s
+    TC : float
+        Time from end of second GRE block to next pulse in s
+    TR : float
+        Time from one gradient echo to next in s
+    alpha_1 : float
+        Flip angle for first block in deg
+    alpha_2 : float
+        Flip angle for second block in deg
+    n : float
+        Number of shots
+    MPRAGE_TR : float
+        Time from one pulse to another in s
+    eff : float
+        Inversion pulse efficiency
+
+    Returns
+    -------
+    T1 : ndarray
+        Quantitative T1 map calculated from MP2RAGE sequence
+    """
+    pass
