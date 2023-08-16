@@ -22,7 +22,7 @@ def GRE(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=
         Flip angle for second block in deg
     n : arraylike, optional, default=36
         Number of shots
-    MPRAGE_TR : arraylike, optional, default=6
+    MP2RAGE_TR : arraylike, optional, default=6
         Time from one pulse to another in s
     eff : arraylike, optional, default=0.96
         Inversion pulse efficiency
@@ -112,7 +112,7 @@ def t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
         Flip angle for second block in deg
     n : float
         Number of shots
-    MPRAGE_TR : float
+    MP2RAGE_TR : float
         Time from one pulse to another in s
     eff : float
         Inversion pulse efficiency
