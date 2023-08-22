@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # DICOM folder
-dataset="/nfs/masi/saundam1/Datasets/MP2RAGE"
+dataset="/nfs/masi/saundam1/datasets/MP2RAGE"
 
 # Output folder
-output="/nfs/masi/saundam1/Outputs/MP2RAGE_converted"
+output="/nfs/masi/saundam1/outputs/mp2rage_converted"
 
 # Loop over all directories in dataset
 subjects=`ls $dataset`
