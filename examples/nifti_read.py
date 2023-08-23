@@ -10,24 +10,17 @@ from nibabel.testing import data_path
 subject = '334264'
 scan = '401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE'
 scan_num = '401'
-dataset_path = '/nfs/masi/saundam1/Outputs/MP2RAGE_converted/'
+dataset_path = '/nfs/masi/saundam1/outputs/mp2rage_converted_v2023/'
 subject_path = os.path.join(dataset_path, subject, scan)
 
 # Load NIFTI 
 nifti_path = os.path.join(subject_path, '401_ph_t3310.nii')
-nifti_file = glob.glob(nifti_path)
-img = nib.load(nifti_file[0])
+img = nib.load(nifti_path)
 
 # Load JSON
 json_path = os.path.join(subject_path, '401_ph_t3310.json')
-json_file = glob.glob(json_path)
-with open(json_file[0], 'r') as f:
+with open(json_path, 'r') as f:
     json = json.load(f)
-
-# Print info to file
-# output_path = os.path.join(os.path.dirname('.'), 'outputs', f'{subject}_{scan_num}_nifti_info.txt')
-# with open(output_path, 'w') as f:
-#     f.write(str(img.header))
 
 # Set slope and intercept
 scl_slope = 1/json["PhilipsScaleSlope"]
@@ -37,4 +30,6 @@ img.header.set_slope_inter(scl_slope, scl_inter)
 
 # Save file
 output_path = os.path.join('outputs', f'{subject}_{scan_num}_nifti_scaled.nii.gz')
-nib.save(img, output_path)
+print(os.listdir())
+with open(output_path, 'w') as f:
+    nib.save(img, output_path)
