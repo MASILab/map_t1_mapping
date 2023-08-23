@@ -4,7 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from math import ceil
-from mp2rage.utils import GRE
+from t1_mapping.utils import GRE
 
 # Parameter ranges for the sweep
 param_ranges = {
@@ -45,7 +45,6 @@ axes = axes.flatten()
 for i, param in enumerate(param_ranges):
     input_params = param_defaults.copy()
     input_params[param] = param_ranges[param]
-
 
     ax = axes[i]
     GRE1_values, GRE2_values = GRE(**input_params)
