@@ -4,7 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from math import ceil
-from t1_mapping.utils import GRE
+from t1_mapping.utils import gre_signal
 
 # Parameter ranges for the sweep
 param_ranges = {
@@ -47,7 +47,7 @@ for i, param in enumerate(param_ranges):
     input_params[param] = param_ranges[param]
 
     ax = axes[i]
-    GRE1_values, GRE2_values = GRE(**input_params)
+    GRE1_values, GRE2_values = gre_signal(**input_params)
     ax.plot(param_ranges[param], GRE1_values)
     ax.plot(param_ranges[param], GRE2_values)
     ax.set_title(f"GRE vs. {param}")
