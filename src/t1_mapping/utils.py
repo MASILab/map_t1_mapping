@@ -1,6 +1,6 @@
 import numpy as np
 
-def GRE(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=6, eff=0.96):
+def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=6, eff=0.96):
     """
     Returns the values for the gradient echo blocks GRE1 and GRE2.
 
@@ -56,7 +56,7 @@ def GRE(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=
     
     return GRE1, GRE2
 
-def MP2RAGE(GRE1, GRE2, robust=False, beta=10):
+def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
     """
     Returns the MP2RAGE image formed by two gradient echo blocks.
 
@@ -88,7 +88,7 @@ def MP2RAGE(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
+def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
