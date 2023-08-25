@@ -34,6 +34,10 @@ def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2R
     GRE2: ndarray
         Second gradient echo block
     """
+    # Convert alpha_1 and alpha_2 to radians
+    alpha_1 = alpha_1*np.pi/180
+    alpha_2 = alpha_2*np.pi/180
+    
     params = [T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff]
 
     # Convert to Numpy arrays

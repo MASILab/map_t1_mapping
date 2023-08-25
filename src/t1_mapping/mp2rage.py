@@ -2,9 +2,36 @@ import t1_mapping.utils
 from functools import cached_property
 import nibabel as nib
 import numpy as np
+from typing import TypedDict
+
+class MP2RAGEParameters(TypedDict):
+    """
+    TypedDict containing acquisition parameters.
+
+    Parameters
+    ----------
+    TR : float
+        Repitition time of the gradient echo readout in s
+    MP2RAGE_TR : float
+        Time between inversion pulses in s
+    flip_angles : list of floats
+        Flip angles of gradient echo pulses in deg
+    inversion_times : list of floats
+        Time from inversion pulse to middle of each gradient echo readout
+    n : int
+        Number of pulses within each gradient echo readout
+    eff : float
+        Inversion efficiency of scanner
+    """
+    TR: float
+    MP2RAGE_TR: float
+    flip_angles: list
+    inversion_times: list
+    n: int
+    eff: float
 
 class MP2RAGEFitter():
-    def __init__(self, inv1, inv2, acq_params):
+    def __init__(self, inv1, inv2, acq_params: MP2RAGEParameters):
         """
         Fitter for calculations using an MP2RAGE sequence
 
@@ -14,8 +41,8 @@ class MP2RAGEFitter():
             First gradient echo readout, stored as a NIFTI image
         inv2 : nibabel.nifti1.Nifti1Image or nibabel.nifti2.Nifti2Image
             Second gradient echo readout, stored as a NIFTI image
-        acq_params : Dict
-            Dictionary containing acquisition parameters
+        acq_params : MP2RAGEParameters
+            TypedDict containing acquisition parameters
 
         Attributes
         ----------
@@ -40,3 +67,23 @@ class MP2RAGEFitter():
     def t1w(self):
         t1w_array = t1_mapping.utils.mp2rage_t1w(self._inv1_data, self._inv2_data)
         return nib.nifti2.Nifti2Image(t1w_array, self.inv1.affine)
+
+# class MP2RAGEDataset():
+#     def __init__(self):
+#         """
+#         Provides an interface between MP2RAGE dataset and calculation of T1-weighted image and T1 map.
+
+#         Assumes a file structure of [subject]/[scan_name]/[scan_num]/[scan]
+
+#         Parameters
+#         ----------
+#         dataset_path : str
+#             Path to directory containing the subjects
+#         subjects_df : pandas.DataFrame
+#             DataFrame containing 'subject', 'scan_name', 'scan_num' to use
+#         output_path : str
+#             Path to directory to place output T1 maps
+#         """
+#         self.inv1 = inv1
+#         self.inv2 = inv2
+#         self.acq_params = acq_params
