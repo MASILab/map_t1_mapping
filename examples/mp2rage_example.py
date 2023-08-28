@@ -43,36 +43,12 @@ inv2_data = inv2_real_data + 1j*inv2_imag_data
 inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
 inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
 
-# # Create phase and magnitude NIFTIs from this data
-# inv1_mag = np.abs(inv1_data)
-# inv1_ph = np.angle(inv1_data)
-# inv2_mag = np.abs(inv2_data)
-# inv2_ph = np.angle(inv2_data)
-
-# inv1_mag_nifti = nib.nifti2.Nifti2Image(inv1_mag, inv1_real.affine)
-# inv1_ph_nifti = nib.nifti2.Nifti2Image(inv1_ph, inv1_real.affine)
-# inv2_mag_nifti = nib.nifti2.Nifti2Image(inv2_mag, inv2_real.affine)
-# inv2_ph_nifti = nib.nifti2.Nifti2Image(inv2_ph, inv2_real.affine)
-
-# Load acquisition parameters
-MPRAGE_tr = 8.25
-nZslices = [112.5, 112.5]
-FLASH_tr = [inv1_json['RepetitionTime'], inv2_json['RepetitionTime']]
-invtimesAB = [inv1_json['TriggerDelayTime'], inv2_json['TriggerDelayTime']]
-flipangleABdegree =[inv1_json['FlipAngle'], inv2_json['FlipAngle']]
-sequence = 'normal'
-inversion_efficiency = 0.84 # estimate
-B0 = inv1_json['MagneticFieldStrength']
-
 # Create parameter dict
 params = {
-    "TA": 1,
-    "TB": 1,
-    "TC": 1,
-    "TR": 6e-3,
+    "TR": inv1_json["RepetitionTime"],
     "MP2RAGE_TR": 8.25,
     "flip_angles": [inv1_json['FlipAngle'], inv2_json['FlipAngle']],
-    "inversion_times": [inv1_json['TriggerDelayTime'], inv2_json['TriggerDelayTime']],
+    "inversion_times": [inv1_json['TriggerDelayTime']/1000, inv2_json['TriggerDelayTime']/1000],
     "n": 225,
     "eff": 0.84,
 }
@@ -80,7 +56,17 @@ params = {
 # Create MP2RAGE object
 fitter = t1_mapping.mp2rage.MP2RAGEFitter(inv1, inv2, params)
 
-# Plot T1 map
+# Plot T1-weighted image
 fig, ax = plt.subplots()
 plotting.plot_img(fitter.t1w, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+ax.set_title('T1-weighted image')
 plt.show()
+
+# Plot T1 map
+fig, ax = plt.subplots()
+plotting.plot_img(fitter.t1_map, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True, vmin=0, vmax=5)
+ax.set_title('T1 map')
+plt.show()
+
+# Save to NIFTI
+nib.save(fitter.t1_map, os.path.join('examples', 'outputs', '334264_t1_map.nii.gz'))
