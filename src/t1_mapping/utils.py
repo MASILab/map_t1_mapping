@@ -165,3 +165,5 @@ def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, 
     t1_calc = t1_calc.reshape(t1w.shape)
 
     return t1_calc
+
+# def mp2rage_signal(nimages, MP2RAGE_TR, inv_times, n, FLASH_TR, flipangle, T1, eff=0.84)
