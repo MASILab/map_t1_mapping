@@ -57,4 +57,12 @@ TC = params["MP2RAGE_TR"] - params["inversion_times"][1] - params["n"]/2*params[
 )
 
 # Create estimated T1-weighted image
-# MP2RAGE = t1_mapping.utils.mp2rage_t1w(GRE1, GRE2).reshape(num_points, 1)
+MP2RAGE = t1_mapping.utils.mp2rage_t1w(GRE1, GRE2)
+
+# Sort arrays
+sorted_idx = np.argsort(MP2RAGE)
+MP2RAGE = MP2RAGE[sorted_idx]
+t1_estimate = t1_estimate[sorted_idx]
+
+# Calculate for desired values
+t1_calc = np.interp(t1w.flatten(), MP2RAGE, t1_estimate)
