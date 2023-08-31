@@ -1,5 +1,7 @@
 import numpy as np
-from scipy.interpolate import CubicSpline
+import matplotlib.pyplot as plt
+from nibabel.affines import apply_affine
+# from scipy.interpolate import CubicSpline
 
 def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=6, eff=0.96):
     """
@@ -87,7 +89,18 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
     -------
     MP2RAGE : ndarray
         T1-weighted MP2RAGE image
-    """
+    """# Create NIFTIs
+# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
+# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
+
+# # Calculate MP2RAGE image
+# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
+# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
+
+# # Plot T1w image
+# fig, ax = plt.subplots()
+# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+# ax.set_title('T1-Weighted Image')
     
     # Calculate MP2RAGE 
     if robust: 
@@ -117,7 +130,18 @@ def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, 
     TC : float
         Time from end of second GRE block to next pulse in s
     TR : float
-        Time from one gradient echo to next in s
+        Time from one gradient# Create NIFTIs
+# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
+# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
+
+# # Calculate MP2RAGE image
+# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
+# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
+
+# # Plot T1w image
+# fig, ax = plt.subplots()
+# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+# ax.set_title('T1-Weighted Image') echo to next in s
     alpha_1 : float
         Flip angle for first block in deg
     alpha_2 : float
@@ -126,13 +150,32 @@ def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, 
         Number of pulses in gradient echo block
     MP2RAGE_TR : float
         Time from one pulse to another in s
-    eff : float
+    eff : float# Create NIFTIs
+# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
+# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
+
+# # Calculate MP2RAGE image
+# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
+# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
+
+# # Plot T1w image
+# fig, ax = plt.subplots()
+# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+# ax.set_title('T1-Weighted Image')
         Inversion pulse efficiency
 
-    Returns
-    -------
-    T1 : ndarray
-        Quantitative T1 map calculated from MP2RAGE sequence
+    Returns# Create NIFTIs
+# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
+# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
+
+# # Calculate MP2RAGE image
+# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
+# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
+
+# # Plot T1w image
+# fig, ax = plt.subplots()
+# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+# ax.set_title('T1-Weighted Image')alculated from MP2RAGE sequence
     """
     # Calculate T1-weighted image
     t1w = mp2rage_t1w(GRE1, GRE2)
@@ -173,4 +216,49 @@ def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, 
 
     return t1_calc
 
+def plot_ortho(image, cut_coords, affine):
+    """
+    Plots orthographic slices for a given volumetric array.
+
+    Parameters
+    ---------
+    image : arraylike
+        Volumetric 3D array to be plotted
+    cut_coords : tuple of int
+        Tuple of coordinates to slice. The default value is the center coordinate.
+
+    Returns
+    -------
+    fig : matplotlib.pyplot.figure
+        Figure containing orthographic slices
+    """
+    fig, axes = plt.subplots(1, 3)
+
+    center = np.array([image.shape[0]//2, image.shape[1]//2, image.shape[2]//2], dtype=int)
+
+    if cut_coords == None:
+        cut_coords = (0, 0, 0)
+    
+    cut_coords = np.array(cut_coords, dtype=int)
+    cut_coords = cut_coords + center
+
+    xy_slice = image[:,:,cut_coords[2]]
+    xz_slice = image[:,cut_coords[1],:]
+    yz_slice = image[cut_coords[0],:,:]
+
+    im1 = axes[0].imshow(xy_slice, cmap='gray', aspect='auto')
+    im2 = axes[1].imshow(xz_slice, cmap='gray', aspect='auto')
+    im3 = axes[2].imshow(yz_slice, cmap='gray', aspect='auto')
+
+    for ax in axes:
+        # ax.axis('off')
+        ax.set_aspect('equal')
+
+    cbar = fig.colorbar(im3, ax=axes[2])
+
+    fig.tight_layout()
+
+    return fig
+
+    
 # def mp2rage_signal(nimages, MP2RAGE_TR, inv_times, n, FLASH_TR, flipangle, T1, eff=0.84)

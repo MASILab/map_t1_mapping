@@ -15,6 +15,22 @@ scan_times = ['1010', '3310']
 dataset_path = '/nfs/masi/saundam1/outputs/mp2rage_converted_v2023/'
 subject_path = os.path.join(dataset_path, subject, scan)
 
+# Load NIFTI files
+inv1_real = nib.load(os.path.join(subject_path, f'{scan_num}_real_t{scan_times[0]}.nii'))
+inv1_imag = nib.load(os.path.join(subject_path, f'{scan_num}_imaginary_t{scan_times[0]}.nii'))
+inv2_real = nib.load(os.path.join(subject_path, f'{scan_num}_real_t{scan_times[1]}.nii'))
+inv2_imag = nib.load(os.path.join(subject_path, f'{scan_num}_imaginary_t{scan_times[1]}.nii'))
+
+# Load data from NIFTI
+inv1_real_data = inv1_real.get_fdata()
+inv1_imag_data = inv1_imag.get_fdata()
+inv2_real_data = inv2_real.get_fdata()
+inv2_imag_data = inv2_imag.get_fdata()
+
+# Create combined complex data
+inv1_data = inv1_real_data + 1j*inv1_imag_data
+inv2_data = inv2_real_data + 1j*inv2_imag_data
+
 # Load JSON
 inv1_json_path = os.path.join(subject_path, f'{scan_num}_t{scan_times[0]}.json')
 inv2_json_path = os.path.join(subject_path, f'{scan_num}_t{scan_times[1]}.json')
@@ -31,6 +47,9 @@ params : t1_mapping.mp2rage.MP2RAGEParameters = {
     "n": 225,
     "eff": 0.84,
 }
+
+# Calculate MP2RAGE image
+t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
 
 # Range of values for T1
 t1_estimate = np.arange(0.05, 5.01, 0.05)
