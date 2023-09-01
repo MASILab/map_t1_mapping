@@ -79,12 +79,12 @@ class MP2RAGEFitter():
     @cached_property
     def t1w(self):
         t1w_array = t1_mapping.utils.mp2rage_t1w(self._inv1_data, self._inv2_data)
-        return nib.nifti2.Nifti2Image(t1w_array, self.inv1.affine)
+        return nib.nifti1.Nifti1Image(t1w_array, self.inv1.affine)
     
     @cached_property
     def t1_map(self):
         t1_map = t1_mapping.utils.mp2rage_t1_map(self._inv1_data, self._inv2_data, **self.eqn_params)
-        return nib.nifti2.Nifti2Image(t1_map, self.inv1.affine)
+        return nib.nifti1.Nifti1Image(t1_map, self.inv1.affine)
 
 # class MP2RAGEDataset():
 #     def __init__(self):
