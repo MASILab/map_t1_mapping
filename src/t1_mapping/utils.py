@@ -89,18 +89,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
     -------
     MP2RAGE : ndarray
         T1-weighted MP2RAGE image
-    """# Create NIFTIs
-# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
-# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
-
-# # Calculate MP2RAGE image
-# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
-# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
-
-# # Plot T1w image
-# fig, ax = plt.subplots()
-# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
-# ax.set_title('T1-Weighted Image')
+    """
     
     # Calculate MP2RAGE 
     if robust: 
@@ -130,18 +119,7 @@ def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, 
     TC : float
         Time from end of second GRE block to next pulse in s
     TR : float
-        Time from one gradient# Create NIFTIs
-# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
-# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
-
-# # Calculate MP2RAGE image
-# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
-# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
-
-# # Plot T1w image
-# fig, ax = plt.subplots()
-# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
-# ax.set_title('T1-Weighted Image') echo to next in s
+        Time from one gradient echo to next in s
     alpha_1 : float
         Flip angle for first block in deg
     alpha_2 : float
@@ -150,32 +128,8 @@ def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, 
         Number of pulses in gradient echo block
     MP2RAGE_TR : float
         Time from one pulse to another in s
-    eff : float# Create NIFTIs
-# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
-# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
-
-# # Calculate MP2RAGE image
-# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
-# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
-
-# # Plot T1w image
-# fig, ax = plt.subplots()
-# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
-# ax.set_title('T1-Weighted Image')
+    eff : float
         Inversion pulse efficiency
-
-    Returns# Create NIFTIs
-# inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
-# inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
-
-# # Calculate MP2RAGE image
-# t1w = t1_mapping.utils.mp2rage_t1w(inv1_data, inv2_data)
-# t1w_nifti = nib.nifti2.Nifti2Image(t1w, inv1_real.affine)
-
-# # Plot T1w image
-# fig, ax = plt.subplots()
-# plotting.plot_img(t1w_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
-# ax.set_title('T1-Weighted Image')alculated from MP2RAGE sequence
     """
     # Calculate T1-weighted image
     t1w = mp2rage_t1w(GRE1, GRE2)
