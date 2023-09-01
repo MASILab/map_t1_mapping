@@ -145,4 +145,4 @@ cython_debug/
 **/outputs/
 .vscode/*
 *.pyc
-**/__pycache__/
+__pycache__/
