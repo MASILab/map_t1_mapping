@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from nibabel.affines import apply_affine
 # from scipy.interpolate import CubicSpline
 
-def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=6, eff=0.96, method='marques_orig'):
+def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2RAGE_TR=6, eff=0.96, method='code'):
     """
     Returns the values for the gradient echo blocks GRE1 and GRE2.
 
@@ -29,8 +29,9 @@ def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2R
         Time from one pulse to another in s
     eff : arraylike, optional, default=0.96
         Inversion pulse efficiency
-    method : string, optional, default='marques_orig'
-        Either 'marques_orig', 'paper', or 'marques_single' for different equations
+    method : string, optional, default='code'
+        Perform calculations using equations from 'code' (GitHub repository) 
+        or 'paper' for equations presented in paper
 
     Returns
     -------
@@ -60,7 +61,9 @@ def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2R
     mz_ss = (((((1-EA)*np.float_power(np.cos(alpha_1)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n))/(1-np.cos(alpha_2)*E1))*EC + (1-EC))/(1 + eff*np.float_power(np.cos(alpha_1)*np.cos(alpha_2), n)*np.exp(-MP2RAGE_TR/T1))
     
     # Calculate gradient echo blocks
-    if method == 'marques_orig':
+    if method == 'code':
+        # GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))
+        # GRE2 = np.sin(alpha_2)*(((((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1))
         term1 = (-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
         GRE1 = term1*np.sin(alpha_1)
         term2 = term1*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
@@ -69,10 +72,7 @@ def gre_signal(T1=1, TA=1, TB=1, TC=1, TR=6e-3, alpha_1=4, alpha_2=4, n=36, MP2R
     elif method == 'paper':
         GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power(np.cos(alpha_1)*E1, n/2-1) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2-1))/(1-np.cos(alpha_1)*E1))
         GRE2 = np.sin(alpha_2)*((mz_ss - (1-EC))/(EC*np.float_power(np.cos(alpha_2)*E1, n/2)) - (1-E1)*((np.float_power(np.cos(alpha_2)*E1, -n/2)-1)/(1 - np.cos(alpha_2)*E1)))
-    elif method == 'marques_single':
-        GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))
-        GRE2 = np.sin(alpha_2)*((EB*(-eff*mz_ss*EA*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-EA)*np.float_power(np.cos(alpha_1)*E1, n) + (1-np.float_power(np.cos(alpha_1)*E1, n))/(1-np.cos(alpha_1)*E1)) + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1))
-
+        
     return GRE1, GRE2
 
 def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):

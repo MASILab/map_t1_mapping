@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from t1_mapping.utils import gre_signal
 
 T1 = np.linspace(0.5, 5, 1000)
@@ -15,8 +16,20 @@ input_params = {
     "eff": 0.96
 }
 
-GRE1_orig, GRE2_orig = gre_signal(T1=T1, **input_params, method='marques_orig')
-GRE1_single, GRE2_single = gre_signal(T1=T1, **input_params, method='marques_single')
+GRE1_orig, GRE2_orig = gre_signal(T1=T1, **input_params, method='code')
+GRE1_paper, GRE2_paper = gre_signal(T1=T1, **input_params, method='paper')
 
-print(GRE1_orig == GRE1_single)
-print(GRE2_orig == GRE2_single)
+fig, ax = plt.subplots()
+ax.plot(T1, GRE1_orig, c='r', ls=':', label='Marques code GRE1')
+ax.plot(T1, GRE1_paper, c='r', ls='-', label='Marques paper GRE1')
+ax.plot(T1, GRE2_orig, c='g', ls=':', label='Marques code GRE2')
+ax.plot(T1, GRE2_paper, c='g', ls='-', label='Marques paper GRE2')
+ax.set_xlabel('T1 (s)')
+ax.set_ylabel('Signal value')
+ax.set_title('Comparison of GRE equations')
+ax.legend()
+plt.show()
+
+# Should be true if paper matches code
+print(np.all(GRE1_paper == GRE1_orig))
+print(np.all(GRE2_paper == GRE2_orig))
