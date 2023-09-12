@@ -15,11 +15,7 @@ def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
         Note that len(inversion_times) must be the same as the number of GRE readouts.
     TR : arraylike
         Time from one gradient echo to next in s.
-    MP2RAGE_TR : arraylike
-        Time from one pulse to another in s.
-    flip_angles : arraylike
-        Flip angles in deg for each inversion block. 
-        Note: len(flip_angles) must be the same as the number of GRE readouts.
+    E1_repeat = np.stack(np.reshape(E1, (1, len(E1))), axis=0)he number of GRE readouts.
     n : list of int
         Number of pulses in gradient echo block. If n is a list of 2 values,
         then n is the number of pulses before and after the center of k-space.
@@ -73,12 +69,11 @@ def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
 
     # Calculate exponential terms
     E1 = np.exp(-TR/T1)
-    # EA = np.exp(-TA/T1)
     ED = np.exp(-TD[:,np.newaxis]/T1)
 
     # Calculate steady-state magnetization
-    denom = 1 + eff*np.float_power(np.prod(np.cos(flip_angles)*E1), n)*(np.prod(ED))
     num = 1 - ED[0]
+    denom = 1 + eff*np.float_power(np.prod(np.cos(flip_angles))*E1**n_readouts, n)*np.prod(ED, axis=0)
     for k in range(0, n_readouts):
         num = num*np.float_power(np.cos(flip_angles[k])*E1, n) + \
             (1-E1)*(1-np.float_power(np.cos(flip_angles[k])*E1, n))/(1-np.cos(flip_angles[k])*E1)
@@ -87,92 +82,99 @@ def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
     mz_ss = num/denom
 
     # Calculate GRE signal
-    
     GRE = np.zeros((n_readouts, len(T1)))
+
+    temp = (-eff*mz_ss*ED[0] + (1-ED[0]))*np.float_power((np.cos(flip_angles[0])*E1), n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[0])*E1, n_bef))/(1-np.cos(flip_angles[0])*E1)
+    GRE[0,:] = temp*np.sin(flip_angles[0])
+
+    for m in range(1, n_readouts):
+        temp = temp*np.float_power(np.cos(flip_angles[m-1])*E1, n_aft) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m-1])*E1, n_aft))/(1-np.cos(flip_angles[m-1])*E1)
+        temp = (temp*ED[m] + (1-ED[m]))*np.float_power(np.cos(flip_angles[m])*E1, n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m])*E1, n_bef))/(1-np.cos(flip_angles[m])*E1)
+        GRE[m,:]= temp*np.sin(flip_angles[m])
+        
     return GRE
 
 
-# def gre_signal(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
-    # """
-    # Returns the values for the gradient echo blocks GRE1 and GRE2.
+def gre_signal_two(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
+    """
+    Returns the values for the gradient echo blocks GRE1 and GRE2.
 
-    # Parameters
-    # ---------
-    # T1 : arraylike
-    #     T1 relaxation time in s
-    # TA : arraylike
-    #     Time from initial pulse to beginning of first GRE block in s
-    # TB : arraylike
-    #     Time from end of first GRE block to beginning of second block in s
-    # TR : arraylike
-    #     Time from one gradient echo to next in s
-    # alpha_1 : arraylike
-    #     Flip angle for first block in deg
-    # alpha_2 : arraylike
-    #     Flip angle for second block in deg
-    # n : arraylike
-    #     Number of pulses in gradient echo block
-    # MP2RAGE_TR : arraylike
-    #     Time from one pulse to another in s
-    # TC : arraylike, optional
-    #     Time from end of second GRE block to next pulse in s. Calculated if not provided.
-    # eff : arraylike, optional, default=0.96
-    #     Inversion pulse efficiency
-    # method : string, optional, default='code'
-    #     Perform calculations using equations from 'code' (GitHub repository) 
-    #     or 'paper' for equations presented in paper. Both provide same results.
+    Parameters
+    ---------
+    T1 : arraylike
+        T1 relaxation time in s
+    TA : arraylike
+        Time from initial pulse to beginning of first GRE block in s
+    TB : arraylike
+        Time from end of first GRE block to beginning of second block in s
+    TR : arraylike
+        Time from one gradient echo to next in s
+    alpha_1 : arraylike
+        Flip angle for first block in deg
+    alpha_2 : arraylike
+        Flip angle for second block in deg
+    n : arraylike
+        Number of pulses in gradient echo block
+    MP2RAGE_TR : arraylike
+        Time from one pulse to another in s
+    TC : arraylike, optional
+        Time from end of second GRE block to next pulse in s. Calculated if not provided.
+    eff : arraylike, optional, default=0.96
+        Inversion pulse efficiency
+    method : string, optional, default='code'
+        Perform calculations using equations from 'code' (GitHub repository) 
+        or 'paper' for equations presented in paper. Both provide same results.
 
-    # Returns
-    # -------
-    # GRE1: ndarray
-    #     First gradient echo block
-    # GRE2: ndarray
-    #     Second gradient echo block
-    # """
-    # # Assign TC if not given
-    # if TC is None:
-    #     TC = MP2RAGE_TR - (TA + TB + 2*n*TR)
-    #     print(f'Setting TC to {TC}')
+    Returns
+    -------
+    GRE1: ndarray
+        First gradient echo block
+    GRE2: ndarray
+        Second gradient echo block
+    """
+    # Assign TC if not given
+    if TC is None:
+        TC = MP2RAGE_TR - (TA + TB + 2*n*TR)
+        print(f'Setting TC to {TC}')
 
-    # # Check timing variables make sense
-    # if TA + TB + TC + 2*n*TR != MP2RAGE_TR:
-    #     raise ValueError("Timing parameters are invalid. TA + TB + TC + 2*n*TR must equal MP2RAGE_TR.")
+    # Check timing variables make sense
+    if TA + TB + TC + 2*n*TR != MP2RAGE_TR:
+        raise ValueError("Timing parameters are invalid. TA + TB + TC + 2*n*TR must equal MP2RAGE_TR.")
 
-    # # Convert alpha_1 and alpha_2 to radians
-    # alpha_1 = alpha_1*np.pi/180
-    # alpha_2 = alpha_2*np.pi/180
+    # Convert alpha_1 and alpha_2 to radians
+    alpha_1 = alpha_1*np.pi/180
+    alpha_2 = alpha_2*np.pi/180
     
-    # params = [T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff]
+    params = [T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff]
 
-    # # Convert to Numpy arrays
-    # for i, p in enumerate(params):
-    #     params[i] = np.asarray([p]) if np.isscalar(p) else np.asarray(p)
-    # (T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff) = tuple(params)
+    # Convert to Numpy arrays
+    for i, p in enumerate(params):
+        params[i] = np.asarray([p]) if np.isscalar(p) else np.asarray(p)
+    (T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff) = tuple(params)
 
-    # # Calculate exponential terms
-    # E1 = np.exp(-TR/T1)
-    # EA = np.exp(-TA/T1)
-    # EB = np.exp(-TB/T1)
-    # EC = np.exp(-TC/T1)
+    # Calculate exponential terms
+    E1 = np.exp(-TR/T1)
+    EA = np.exp(-TA/T1)
+    EB = np.exp(-TB/T1)
+    EC = np.exp(-TC/T1)
     
-    # # Calculate steady-state magnetization
-    # mz_ss = (((((1-EA)*np.float_power(np.cos(alpha_1)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n))/(1-np.cos(alpha_2)*E1))*EC + (1-EC))/(1 + eff*np.float_power(np.cos(alpha_1)*np.cos(alpha_2), n)*np.exp(-MP2RAGE_TR/T1))
+    # Calculate steady-state magnetization
+    mz_ss = (((((1-EA)*np.float_power(np.cos(alpha_1)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n))/(1-np.cos(alpha_2)*E1))*EC + (1-EC))/(1 + eff*np.float_power(np.cos(alpha_1)*np.cos(alpha_2), n)*np.exp(-MP2RAGE_TR/T1))
     
-    # # Calculate gradient echo blocks
-    # if method == 'code':
-    #     # GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))
-    #     # GRE2 = np.sin(alpha_2)*(((((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1))
-    #     term1 = (-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
-    #     GRE1 = term1*np.sin(alpha_1)
-    #     term2 = term1*np.float_power(n   except:
-    #     raise ValueError('n should be a list of either 1 or 2 values')p.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
-    #     term3 = (term2*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1)
-    #     GRE2 = term3*np.sin(alpha_2)
-    # elif method == 'paper':
-    #     GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power(np.cos(alpha_1)*E1, n/2-1) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2-1))/(1-np.cos(alpha_1)*E1))
-    #     GRE2 = np.sin(alpha_2)*((mz_ss - (1-EC))/(EC*np.float_power(np.cos(alpha_2)*E1, n/2)) - (1-E1)*((np.float_power(np.cos(alpha_2)*E1, -n/2)-1)/(1 - np.cos(alpha_2)*E1)))
+    # Calculate gradient echo blocks
+    if method == 'code':
+        # GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))
+        # GRE2 = np.sin(alpha_2)*(((((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1))
+        term1 = (-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
+        GRE1 = term1*np.sin(alpha_1)
+        term2 = term1*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
+        term3 = (term2*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1)
+        GRE2 = term3*np.sin(alpha_2)
+    elif method == 'paper':
+        GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power(np.cos(alpha_1)*E1, n/2-1) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2-1))/(1-np.cos(alpha_1)*E1))
+        GRE2 = np.sin(alpha_2)*((mz_ss - (1-EC))/(EC*np.float_power(np.cos(alpha_2)*E1, n/2)) - (1-E1)*((np.float_power(np.cos(alpha_2)*E1, -n/2)-1)/(1 - np.cos(alpha_2)*E1)))
         
-    # return GRE1, GRE2
+    return GRE1, GRE2
 
 def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
     """
