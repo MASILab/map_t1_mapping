@@ -2,7 +2,100 @@ import numpy as np
 import matplotlib.pyplot as plt
 from nibabel.affines import apply_affine
 
-def gre_signal(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
+def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
+    """
+    Returns the values for the gradient echo blocks GRE1 and GRE2.
+
+    Parameters
+    ---------
+    T1 : arraylike
+        T1 relaxation time in s
+    inversion_times : arraylike
+        Time in s from inversion pulse to middle of each inversion block.
+        Note that len(inversion_times) must be the same as the number of GRE readouts.
+    TR : arraylike
+        Time from one gradient echo to next in s.
+    E1_repeat = np.stack(np.reshape(E1, (1, len(E1))), axis=0)he number of GRE readouts.
+    n : list of int
+        Number of pulses in gradient echo block. If n is a list of 2 values,
+        then n is the number of pulses before and after the center of k-space.
+    eff : arraylike, optional, default=0.96
+        Inversion pulse efficiency
+
+    Returns
+    -------
+    GRE : ndarray
+        n by m array containing gradient echo blocks, where n is the number
+        of GRE readouts and m is the number of samples of T1.
+    """
+    # Convert to Numpy arrays
+    params = [T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n]
+    for i, p in enumerate(params):
+        params[i] = np.asarray([p]) if np.isscalar(p) else np.asarray(p)
+    (T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n) = tuple(params)
+
+    # Convert to radians
+    flip_angles = flip_angles*np.pi/180
+
+    # Calculate number of GRE blocks
+    n_readouts = len(inversion_times)
+
+    # Calculate number of slices
+    if len(n) == 1:
+        n_bef = n/2
+        n_aft = n/2
+        n_tot = n
+    elif len(n) == 2:
+        n_bef = n[0]
+        n_aft = n[1]
+        n_tot = np.sum(n)
+    else:
+        raise ValueError('n should be a list of either 1 or 2 values')
+
+    # Calculate timing parameters
+    T_GRE = n_tot*TR
+    T_GRE_bef = n_bef*TR
+    T_GRE_aft = n_aft*TR
+
+    TD = np.zeros((n_readouts+1,))
+    TD[0] = inversion_times[0] - T_GRE_bef 
+    TD[-1] = MP2RAGE_TR - inversion_times[-1] - T_GRE_aft 
+    for k in range(1, n_readouts):
+        TD[k] = inversion_times[k] - inversion_times[k-1] - T_GRE
+        
+    # Check timing variables make sense
+    if sum(TD) + n_readouts*n*TR != MP2RAGE_TR:
+        raise ValueError("Timing parameters are invalid. Make sure the sum of the readout times and recovery times is equal to MP2RAGE_TR.")
+
+    # Calculate exponential terms
+    E1 = np.exp(-TR/T1)
+    ED = np.exp(-TD[:,np.newaxis]/T1)
+
+    # Calculate steady-state magnetization
+    num = 1 - ED[0]
+    denom = 1 + eff*np.float_power(np.prod(np.cos(flip_angles))*E1**n_readouts, n)*np.prod(ED, axis=0)
+    for k in range(0, n_readouts):
+        num = num*np.float_power(np.cos(flip_angles[k])*E1, n) + \
+            (1-E1)*(1-np.float_power(np.cos(flip_angles[k])*E1, n))/(1-np.cos(flip_angles[k])*E1)
+        num = num*ED[k+1] + (1-ED[k+1])
+
+    mz_ss = num/denom
+
+    # Calculate GRE signal
+    GRE = np.zeros((n_readouts, len(T1)))
+
+    temp = (-eff*mz_ss*ED[0] + (1-ED[0]))*np.float_power((np.cos(flip_angles[0])*E1), n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[0])*E1, n_bef))/(1-np.cos(flip_angles[0])*E1)
+    GRE[0,:] = temp*np.sin(flip_angles[0])
+
+    for m in range(1, n_readouts):
+        temp = temp*np.float_power(np.cos(flip_angles[m-1])*E1, n_aft) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m-1])*E1, n_aft))/(1-np.cos(flip_angles[m-1])*E1)
+        temp = (temp*ED[m] + (1-ED[m]))*np.float_power(np.cos(flip_angles[m])*E1, n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m])*E1, n_bef))/(1-np.cos(flip_angles[m])*E1)
+        GRE[m,:]= temp*np.sin(flip_angles[m])
+        
+    return GRE
+
+
+def gre_signal_two(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
     """
     Returns the values for the gradient echo blocks GRE1 and GRE2.
 
