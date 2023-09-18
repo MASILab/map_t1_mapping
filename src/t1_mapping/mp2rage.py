@@ -24,6 +24,7 @@ class MP2RAGEFitter():
         """
         self.inv = inv
         self.acq_params = acq_params
+        self.eqn_params = t1_mapping.utils.acq_to_eqn_params(acq_params)
         
         # Affine for later use
         self._affine = inv[0].affine
@@ -33,7 +34,7 @@ class MP2RAGEFitter():
 
     def get_inv_data(self, index):
         if self._inv_data[index] is None:
-            self._inv_data[index] = np.asanyarray(self.inv[index].get_fdata())
+            self._inv_data[index] = np.asanyarray(self.inv[index].get_fdata(dtype=np.complex64))
         return self._inv_data[index]
 
     # def _get_data(self, index):
@@ -48,16 +49,13 @@ class MP2RAGEFitter():
 
     @cached_property
     def t1w(self):
-        # NEED TO CHANGE?
         t1w_array = t1_mapping.utils.mp2rage_t1w(self.get_inv_data(0), self.get_inv_data(1))
-        return nib.nifti2.Nifti1Image(t1w_array, self._affine)
+        return nib.nifti1.Nifti1Image(t1w_array, self._affine)
     
     @cached_property
     def t1_map(self):
-        acq_params = self.acq_params.copy()
-
         if len(self.inv) == 2:
-            t1_map = t1_mapping.utils.mp2rage_t1_map(self.get_inv_data(0), self.get_inv_data(1), **self.eqn_params)
+            t1_map = t1_mapping.utils.mp2rage_t1_map([self.get_inv_data(0), self.get_inv_data(1)], **self.eqn_params)
         else:
             t1_map = np.zeros(self.get_inv_data(0).shape)
         return nib.nifti1.Nifti1Image(t1_map, self._affine)
@@ -71,7 +69,7 @@ class MP2RAGEFitter():
 
 #         Parameters
 #         ----------
-#         dataset_path : str
+#         dataset_path : t1w_niftistr
 #             Path to directory containing the subjects
 #         subjects_df : pandas.DataFrame
 #             DataFrame containing 'subject', 'scan_name', 'scan_num' to use

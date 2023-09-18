@@ -39,9 +39,9 @@ inv2_imag_data = inv2_imag.get_fdata()
 inv1_data = inv1_real_data + 1j*inv1_imag_data
 inv2_data = inv2_real_data + 1j*inv2_imag_data
 
-# Create NIFTI
-inv1 = nib.nifti2.Nifti2Image(inv1_data, inv1_real.affine)
-inv2 = nib.nifti2.Nifti2Image(inv2_data, inv2_real.affine)
+# Create NIFTIs
+inv1 = nib.nifti1.Nifti1Image(inv1_data, inv1_real.affine)
+inv2 = nib.nifti1.Nifti1Image(inv2_data, inv2_real.affine)
 
 # Create parameter dict
 params = {
@@ -52,8 +52,6 @@ params = {
     "n": 225,
     "eff": 0.84,
 }
-
-print(t1_mapping.utils.acq_to_eqn_params(params))
 
 # Create MP2RAGE object
 fitter = t1_mapping.mp2rage.MP2RAGEFitter([inv1, inv2], params)
