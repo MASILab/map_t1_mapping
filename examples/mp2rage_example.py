@@ -53,8 +53,10 @@ params = {
     "eff": 0.84,
 }
 
+print(t1_mapping.utils.acq_to_eqn_params(params))
+
 # Create MP2RAGE object
-fitter = t1_mapping.mp2rage.MP2RAGEFitter(inv1, inv2, params)
+fitter = t1_mapping.mp2rage.MP2RAGEFitter([inv1, inv2], params)
 
 # Plot T1-weighted image
 fig, ax = plt.subplots()

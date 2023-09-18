@@ -2,45 +2,16 @@ import t1_mapping.utils
 from functools import cached_property
 import nibabel as nib
 import numpy as np
-from typing import TypedDict
-
-class MP2RAGEParameters(TypedDict):
-    """
-    TypedDict containing acquisition parameters.
-
-    Parameters
-    ----------
-    TR : float
-        Repitition time of the gradient echo readout in s
-    MP2RAGE_TR : float
-        Time between inversion pulses in s
-    flip_angles : list of floats
-        Flip angles of gradient echo pulses in deg
-    inversion_times : list of floats
-        Time from inversion pulse to middle of each gradient echo readout
-    n : int
-        Number of pulses within each gradient echo readout
-    eff : float
-        Inversion efficiency of scanner
-    """
-    TR: float
-    MP2RAGE_TR: float
-    flip_angles: list
-    inversion_times: list
-    n: int
-    eff: float
 
 class MP2RAGEFitter():
-    def __init__(self, inv1, inv2, acq_params: MP2RAGEParameters):
+    def __init__(self, inv, acq_params: t1_mapping.utils.MP2RAGEParameters):
         """
         Fitter for calculations using an MP2RAGE sequence
 
         Parameters
         ----------
-        inv1 : nibabel.nifti1.Nifti1Image or nibabel.nifti2.Nifti2Image
-            First gradient echo readout, stored as a NIFTI image
-        inv2 : nibabel.nifti1.Nifti1Image or nibabel.nifti2.Nifti2Image
-            Second gradient echo readout, stored as a NIFTI image
+        inv : list of nibabel.nifti1.Nifti1Image or nibabel.nifti2.Nifti2Image
+            List of gradient echo readouts, stored as NIFTI images
         acq_params : MP2RAGEParameters
             TypedDict containing acquisition parameters
 
@@ -51,40 +22,45 @@ class MP2RAGEFitter():
         t1_map : nibabel.nifti2.Nifti2Image
             Quantitative T1 map
         """
-        self.inv1 = inv1
-        self.inv2 = inv2
+        self.inv = inv
         self.acq_params = acq_params
+        
+        # Affine for later use
+        self._affine = inv[0].affine
 
-        # Use acquisition parameters to calculate equation parameters
-        self.eqn_params = {
-            "TA": self.acq_params["inversion_times"][0] - self.acq_params["n"]/2*self.acq_params["TR"],
-            "TR": self.acq_params["TR"],
-            "alpha_1": self.acq_params["flip_angles"][0],
-            "alpha_2": self.acq_params["flip_angles"][1],
-            "n": self.acq_params["n"],
-            "MP2RAGE_TR": self.acq_params["MP2RAGE_TR"],
-            "eff": self.acq_params["eff"]
-        }
-        self.eqn_params["TB"] = self.acq_params["inversion_times"][1] - self.acq_params["inversion_times"][0] - self.eqn_params["TA"]
-        self.eqn_params["TC"] = self.acq_params["MP2RAGE_TR"] - self.acq_params["inversion_times"][1] - self.eqn_params["TA"]/2
+        # Initialize cached list of data so we don't have to recalculate
+        self._inv_data = [None] * len(self.inv)
 
-    @cached_property
-    def _inv1_data(self):
-        return np.asanyarray(self.inv1.dataobj)
-    
-    @cached_property
-    def _inv2_data(self):
-        return np.asanyarray(self.inv2.dataobj)
+    def get_inv_data(self, index):
+        if self._inv_data[index] is None:
+            self._inv_data[index] = np.asanyarray(self.inv[index].get_fdata())
+        return self._inv_data[index]
+
+    # def _get_data(self, index):
+    #     return np.asanyarray(self._inv_data[index].get_fdata())
+
+    # @cached_property
+    # def _inv_data(self):
+    #     temp = []
+    #     for inv in self.inv:
+    #         temp.append(np.asanyarray(inv.get_fdata()))
+    #     return temp
 
     @cached_property
     def t1w(self):
-        t1w_array = t1_mapping.utils.mp2rage_t1w(self._inv1_data, self._inv2_data)
-        return nib.nifti2.Nifti1Image(t1w_array, self.inv1.affine)
+        # NEED TO CHANGE?
+        t1w_array = t1_mapping.utils.mp2rage_t1w(self.get_inv_data(0), self.get_inv_data(1))
+        return nib.nifti2.Nifti1Image(t1w_array, self._affine)
     
     @cached_property
     def t1_map(self):
-        t1_map = t1_mapping.utils.mp2rage_t1_map(self._inv1_data, self._inv2_data, **self.eqn_params)
-        return nib.nifti1.Nifti1Image(t1_map, self.inv1.affine)
+        acq_params = self.acq_params.copy()
+
+        if len(self.inv) == 2:
+            t1_map = t1_mapping.utils.mp2rage_t1_map(self.get_inv_data(0), self.get_inv_data(1), **self.eqn_params)
+        else:
+            t1_map = np.zeros(self.get_inv_data(0).shape)
+        return nib.nifti1.Nifti1Image(t1_map, self._affine)
 
 # class MP2RAGEDataset():
 #     def __init__(self):
