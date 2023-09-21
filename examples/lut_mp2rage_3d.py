@@ -5,7 +5,9 @@ from nilearn import plotting
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
+from scipy.spatial import KDTree
 from sklearn.metrics import mean_squared_error
+import multiprocessing
 import t1_mapping
 
 # Change plot style
@@ -71,15 +73,17 @@ t1w1_nifti = nib.nifti1.Nifti1Image(t1w1, inv1_real.affine)
 t1w2 = t1_mapping.utils.mp2rage_t1w(inv1_data, inv3_data)
 t1w2_nifti = nib.nifti1.Nifti1Image(t1w1, inv1_real.affine)
 
-# Plot T1w image
-fig, ax = plt.subplots()
-plotting.plot_img(t1w1_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
-ax.set_title('T1-Weighted Image')
+# # Plot T1w image
+# fig, ax = plt.subplots()
+# plotting.plot_img(t1w1_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+# ax.set_title('T1-Weighted Image')
 
-fig, ax = plt.subplots()
-plotting.plot_img(t1w2_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
-ax.set_title('T1-Weighted Image')
-plt.show()
+# fig, ax = plt.subplots()abs_dist = mp2rage[:,np.newaxis,:] - t1w
+# distances = np.sum((abs_dist)** 2, axis=2)
+# closest_indices = np.argmin(distances, axis=0)
+# plotting.plot_img(t1w2_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+# ax.set_title('T1-Weighted Image')
+# plt.show()
 
 # Range of values for T1
 t1_estimate = np.arange(0.05, 5.01, 0.05)
@@ -95,38 +99,39 @@ GRE = t1_mapping.utils.gre_signal(T1=t1_estimate, **eqn_params)
 mp2rage1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
 
-# Plot GRE
-fig, ax = plt.subplots()
-ax.plot(t1_estimate, GRE[0,:], label="GRE1")
-ax.plot(t1_estimate, GRE[1,:], label="GRE2")
-ax.plot(t1_estimate, GRE[2,:], label="GRE3")
-ax.set_title('GRE Estimates')
-ax.set_xlabel("T1 (s)")
-ax.set_ylabel("GRE Value")
-fig.legend()
-plt.show()
+# # Plot GRE
+# fig, ax = plt.subplots()
+# ax.plot(t1_estimate, GRE[0,:], label="GRE1")
+# ax.plot(t1_estimate, GRE[1,:], label="GRE2")
+# ax.plot(t1_estimate, GRE[2,:], label="GRE3")
+# ax.set_title('GRE Estimates')
+# ax.set_xlabel("T1 (s)")
+# ax.set_ylabel("GRE Value")
+# fig.legend()
+# plt.show()
 
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
 
-# Plot curve of known values
-ax.plot(mp2rage1, mp2rage2, t1_estimate, label='Calculated values')
-ax.set_xlabel('MP2RAGE_1*')
-ax.set_ylabel('MP2RAGE_2*')
-ax.set_zlabel('T1 (s)')
-ax.set(xlim=(-0.5, 0.5), ylim=(-0.5, 0.5), zlim=(0,5))
+# # Plot curve of known values
+# ax.plot(mp2rage1, mp2rage2, t1_estimate, label='Calculated values')
+# ax.set_xlabel('MP2RAGE_1*')
+# ax.set_ylabel('MP2RAGE_2*')
+# ax.set_zlabel('T1 (s)')
+t1w2_nifti = nib.nifti1.Nifti1Image(t1w1, inv1_real.affine)
+# ax.set(xlim=(-0.5, 0.5), ylim=(-0.5, 0.5), zlim=(0,5))
 
-# Plot values we want to calculate
-indx = np.arange(0, len(t1w1.flatten()), 50000)
-ax.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zs=0, zdir='z', color=[0,1,0,0.2], label='Unknown values')
+# # Plot values we want to calculate
+# indx = np.arange(0, len(t1w1.flatten()), 50000)
+# ax.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zs=0, zdir='z', color=[0,1,0,0.2], label='Unknown values')
 
-# Plot projections
-ax.plot(mp2rage1, mp2rage2, zs=0, zdir='z', color=[1,0,0,0.2])
-ax.plot(mp2rage1, t1_estimate, zs=-0.5, zdir='x', color=[1,0,0,0.2])
-ax.plot(mp2rage2, t1_estimate, zs=0.5, zdir='y', color=[1,0,0,0.2])
+# # Plot projections
+# ax.plot(mp2rage1, mp2rage2, zs=0, zdir='z', color=[1,0,0,0.2])
+# ax.plot(mp2rage1, t1_estimate, zs=-0.5, zdir='x', color=[1,0,0,0.2])
+# ax.plot(mp2rage2, t1_estimate, zs=0.5, zdir='y', color=[1,0,0,0.2])
 
-ax.legend()
-plt.show()
+# ax.legend()
+# plt.show()
 
 print('Calculating distances')
 
@@ -134,11 +139,19 @@ print('Calculating distances')
 mp2rage = np.array((mp2rage1, mp2rage2), dtype=np.float16).T
 t1w = np.array((t1w1.flatten(), t1w2.flatten()), dtype=np.float16).T
 
-# closest_indices = []
-# for pt in t1w:
-#     distances = np.linalg.norm(mp2rage - pt, axis=1)
-#     closest_index = np.argmin(distances)
-#     closest_indices.append(closest_index)
-abs_dist = mp2rage[:,np.newaxis,:] - t1w
-distances = np.sum((abs_dist)** 2, axis=2)
-closest_indices = np.argmin(distances, axis=0)
+# Find closest neighbor to each point in t1w
+kdtree = KDTree(mp2rage)
+closest_indices = kdtree.query(t1w, k=1)[1]
+
+# Create NIFTI
+t1_calc = t1_estimate[closest_indices].reshape(t1w1.shape)
+t1_calc_nifti = nib.nifti1.Nifti1Image(t1_calc, inv1_real.affine)
+
+# Plot
+fig, ax = plt.subplots()
+plotting.plot_img(t1_calc_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
+ax.set_title('T1 Map')
+plt.show()
+
+# Save NIFTI
+# t1_calc_nifti.to_filename('outputs/example_t1_map_least_dist.nii')

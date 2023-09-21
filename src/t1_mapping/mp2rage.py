@@ -37,15 +37,6 @@ class MP2RAGEFitter():
             self._inv_data[index] = np.asanyarray(self.inv[index].get_fdata(dtype=np.complex64))
         return self._inv_data[index]
 
-    # def _get_data(self, index):
-    #     return np.asanyarray(self._inv_data[index].get_fdata())
-
-    # @cached_property
-    # def _inv_data(self):
-    #     temp = []
-    #     for inv in self.inv:
-    #         temp.append(np.asanyarray(inv.get_fdata()))
-    #     return temp
 
     @cached_property
     def t1w(self):
