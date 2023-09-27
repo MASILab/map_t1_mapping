@@ -6,6 +6,7 @@ from nilearn.plotting import plot_img
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
+from math import floor
 
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -54,7 +55,7 @@ delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
 sd = 0.005
 s = np.random.default_rng()
 
-num_trials = 100_000
+num_trials = 50_000_000
 for trial in range(num_trials):
     if trial % 10_000 == 0:
         print(f'Trial {trial:>12,}/{num_trials:<12,} [{100*trial/num_trials:.1f}%]')
@@ -73,8 +74,8 @@ for trial in range(num_trials):
 
     # Sum the number of occurrences in each voxel
     for m1, m2, t1 in zip(mp2rage1_noisy, mp2rage2_noisy, t1_estimate):
-        coord = (int((m1+0.5)//delta_m), int((m2+0.5)//delta_m), int(t1//delta_t1))
-        distr[int((m1+0.5)//delta_m), int((m2+0.5)//delta_m), int(t1//delta_t1)] += 1
+        coord = (round((m1+0.5)/delta_m)-1, round((m2+0.5)/delta_m)-1, round(t1/delta_t1)-1)
+        distr[coord] += 1
 
 ax.legend()
 
@@ -124,4 +125,4 @@ with open(f'examples/outputs/distr_{num_trials}.npy', 'wb') as f:
 # plotting.plot_img(t1_map_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
 # ax.set_title('T1 Map Image')
 
-plt.show()
+#plt.show()
