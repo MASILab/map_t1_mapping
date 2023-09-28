@@ -58,32 +58,35 @@ sd = 0.005
 s = np.random.default_rng()
 
 # Function to perform a single trial
+num_each_parallel=10_000
 def perform_trial(trial, distr):
-    # Calculate MP2RAGE images with noisy GRE
-    GRE_noisy = GRE + s.normal(scale=sd, size=GRE.shape) + 1j*s.normal(scale=sd, size=GRE.shape)
+    for i in range(num_each_parallel):
+        # Calculate MP2RAGE images with noisy GRE
+        GRE_noisy = GRE + s.normal(scale=sd, size=GRE.shape) + 1j*s.normal(scale=sd, size=GRE.shape)
 
-    mp2rage1_noisy = t1_mapping.utils.mp2rage_t1w(GRE_noisy[0,:], GRE_noisy[1,:])
-    mp2rage2_noisy = t1_mapping.utils.mp2rage_t1w(GRE_noisy[0,:], GRE_noisy[2,:])
+        mp2rage1_noisy = t1_mapping.utils.mp2rage_t1w(GRE_noisy[0,:], GRE_noisy[1,:])
+        mp2rage2_noisy = t1_mapping.utils.mp2rage_t1w(GRE_noisy[0,:], GRE_noisy[2,:])
 
-    # Plot first 100 trials
-    if trial == 1:
-        ax.scatter(0, 0, 0, color=[1,0,0,0.2], label='Noisy values')
-    if trial < 100:
-        ax.scatter(mp2rage1_noisy, mp2rage2_noisy, t1_estimate, color=[1,0,0,0.02])
+        # Plot first 100 trials
+#        if trial == 1:
+#            ax.scatter(0, 0, 0, color=[1,0,0,0.2], label='Noisy values')
+#        if trial < 100:
+#            ax.scatter(mp2rage1_noisy, mp2rage2_noisy, t1_estimate, color=[1,0,0,0.02])
 
-    # Sum the number of occurrences in each voxel
-    for m1, m2, t1 in zip(mp2rage1_noisy, mp2rage2_noisy, t1_estimate):
-        coord = (round((m1+0.5)/delta_m)-1, round((m2+0.5)/delta_m)-1, round(t1/delta_t1)-1)
-        distr[coord] += 1
+        # Sum the number of occurrences in each voxel
+        for m1, m2, t1 in zip(mp2rage1_noisy, mp2rage2_noisy, t1_estimate):
+            coord = (round((m1+0.5)/delta_m)-1, round((m2+0.5)/delta_m)-1, round(t1/delta_t1)-1)
+            distr[coord] += 1
     
 # Use joblib to split up process and tqdm for progress bar
-num_processes = multiprocessing.cpu_count()
-num_trials = 100_000
+num_processes = multiprocessing.cpu_count() - 1
+num_parallel = 10_000
 distr = np.zeros((mp2rage1.shape[0], mp2rage2.shape[0], t1_estimate.shape[0]), dtype=int)
 
 # Perform job - make sure to increase max_nbytes so distr doesn't become read-only
+print(f'Running {num_parallel} jobs of {num_each_parallel} trials each for a total of {num_parallel*num_each_parallel:,} trials')
 Parallel(n_jobs=num_processes, max_nbytes='50M')(
-    delayed(perform_trial)(trial, distr) for trial in tqdm(range(num_trials))
+    delayed(perform_trial)(trial, distr) for trial in tqdm(range(num_parallel))
 )
 
 ax.legend()
@@ -106,7 +109,7 @@ ax.set_title('PDF for several values of MP2RAGE_1 and MP2RAGE_2')
 ax.legend()
 
 # Save PDFs to file for later use
-with open(f'examples/outputs/distr_{num_trials}_parallel.npy', 'wb') as f:
+with open(f'examples/outputs/distr_{num_parallel*num_each_parallel}_parallel.npy', 'wb') as f:
     np.save(f, distr)
 
 ## Create LUT with largest probability of T1 value

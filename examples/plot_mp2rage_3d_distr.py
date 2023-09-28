@@ -33,7 +33,7 @@ ax.hist(mp2rage2, label='MP2RAGE2', bins=40)
 ax.legend()
 
 # Load data
-distr = np.load(os.path.join('examples', 'outputs', 'distr_50000000.npy'))
+distr = np.load(os.path.join('examples', 'outputs', 'distr_50000000_parallel.npy'))
 
 # Plot PDF of example points
 fig, ax = plt.subplots()
