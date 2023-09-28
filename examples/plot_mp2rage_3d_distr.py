@@ -26,16 +26,21 @@ GRE = t1_mapping.utils.gre_signal(T1=t1_estimate, **subj.eqn_params)
 mp2rage1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
 
+# Plot histograms of MP2RAGE
+fig, ax = plt.subplots()
+ax.hist(mp2rage1, label='MP2RAGE1', bins=40)
+ax.hist(mp2rage2, label='MP2RAGE2', bins=40)
+ax.legend()
+
 # Load data
 distr = np.load(os.path.join('examples', 'outputs', 'distr_50000000.npy'))
-mp2rage = np.array([[-0.13,-0.11],[0.34,0.33],[0.50,-0.32]])
 
 # Plot PDF of example points
 fig, ax = plt.subplots()
-pts = [(50, 50), (20, 20), (5, 95)]
+pts = [(50, 50), (20, 20), (30, 20), (5, 95)]
 for idx, (i, j) in enumerate(pts):
     print(sum(distr[i,j,:]*delta_t1))
-    ax.plot(t1_estimate, distr[i,j,:], label=f'MP2RAGE_1={mp2rage[idx,0]:.2f}, MP2RAGE_2={mp2rage[idx,1]:.2f}')
+    ax.plot(t1_estimate, distr[i,j,:], label=f'MP2RAGE_1={mp2rage1[i]:.2f}, MP2RAGE_2={mp2rage2[j]:.2f}')
 ax.set_xlabel('T1 (s)')
 ax.set_ylabel('P(T1)')
 ax.set_title('PDF for several values of MP2RAGE_1 and MP2RAGE_2')
