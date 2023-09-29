@@ -80,7 +80,7 @@ def perform_trial(trial, distr):
     
 # Use joblib to split up process and tqdm for progress bar
 num_processes = multiprocessing.cpu_count() - 1
-num_parallel = 10_000
+num_parallel = 1
 distr = np.zeros((mp2rage1.shape[0], mp2rage2.shape[0], t1_estimate.shape[0]), dtype=int)
 
 # Perform job - make sure to increase max_nbytes so distr doesn't become read-only
@@ -90,7 +90,7 @@ Parallel(n_jobs=num_processes, max_nbytes='50M')(
 )
 
 ax.legend()
-
+print(distr)
 # Create pdf for each voxel
 for i in range(distr.shape[0]):
     for j in range(distr.shape[1]):
@@ -137,4 +137,4 @@ with open(f'examples/outputs/distr_{num_parallel*num_each_parallel}_parallel.npy
 # plotting.plot_img(t1_map_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
 # ax.set_title('T1 Map Image')
 
-#plt.show()
+plt.show()

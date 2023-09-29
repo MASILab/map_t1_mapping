@@ -26,14 +26,8 @@ GRE = t1_mapping.utils.gre_signal(T1=t1_estimate, **subj.eqn_params)
 mp2rage1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
 
-# Plot histograms of MP2RAGE
-fig, ax = plt.subplots()
-ax.hist(mp2rage1, label='MP2RAGE1', bins=40)
-ax.hist(mp2rage2, label='MP2RAGE2', bins=40)
-ax.legend()
-
 # Load data
-distr = np.load(os.path.join('examples', 'outputs', 'distr_50000000_parallel.npy'))
+distr = np.load(os.path.join('examples', 'outputs', 'distr_1M_no_nan.npy'))
 
 # Plot PDF of example points
 fig, ax = plt.subplots()
@@ -53,7 +47,7 @@ ax.legend()
 mode_idx = np.argmax(distr, axis=2)
 LUT = t1_estimate[mode_idx]
 
-# Plot this
+# Plot modes of PDFs
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 X,Y = np.meshgrid(mp2rage1, mp2rage2)
@@ -61,6 +55,15 @@ ax.plot_surface(X, Y, LUT)
 ax.set_xlabel('MP2RAGE_1')
 ax.set_ylabel('MP2RAGE_2')
 ax.set_zlabel('T1 = argmax(P(T1)) (s)')
-ax.set_title('PDF Mode Lookup Table')
+ax.set_title('Modes of PDFs')
+
+# Plot values of MP2RAGE_1 and MP2RAGE_1 where it is NaN
+zero_vals = np.sum(distr, axis=2) == 0
+fig, ax = plt.subplots()
+ax.pcolor(mp2rage1, mp2rage2, zero_vals, cmap='Reds')
+ax.set_aspect(1)
+ax.set_xlabel('MP2RAGE_1')
+ax.set_ylabel('MP2RAGE_2')
+ax.set_title('Values where PDF is 0')
 
 plt.show()

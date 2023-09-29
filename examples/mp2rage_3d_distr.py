@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
 from math import floor
+from tqdm import tqdm
 
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -55,10 +56,8 @@ delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
 sd = 0.005
 s = np.random.default_rng()
 
-num_trials = 100_000
-for trial in range(num_trials):
-    if trial % 10_000 == 0:
-        print(f'Trial {trial:>12,}/{num_trials:<12,} [{100*trial/num_trials:.1f}%]')
+num_trials = 100_000_000
+for trial in tqdm(range(num_trials)):
 
     # Calculate MP2RAGE images with noisy GRE
     GRE_noisy = GRE + s.normal(scale=sd, size=GRE.shape) + 1j*s.normal(scale=sd, size=GRE.shape)
@@ -83,8 +82,12 @@ ax.legend()
 for i in range(distr.shape[0]):
     for j in range(distr.shape[1]):
         # Need to normalize and flip (since indices went high to low)
-        distr[i,j,:] = distr[i,j,:]/(delta_t1*np.sum(distr[i,j,:]))
-        distr[i,j,:] = distr[i,j,::-1]
+        sum = np.sum(distr[i,j,:])
+        if sum == 0:
+            distr[i,j,:] = np.zeros(distr[i,j,:].shape)
+        else:
+            distr[i,j,:] = distr[i,j,:]/(delta_t1*sum)
+            distr[i,j,:] = distr[i,j,::-1]
 
 # Plot PDF of example points
 fig, ax = plt.subplots()
@@ -97,7 +100,7 @@ ax.set_title('PDF for several values of MP2RAGE_1 and MP2RAGE_2')
 ax.legend()
 
 # Save PDFs to file for later use
-with open(f'examples/outputs/distr_{num_trials}.npy', 'wb') as f:
+with open(f'examples/outputs/distr_{int(num_trials//1e6)}M_no_nan.npy', 'wb') as f:
     np.save(f, distr)
 
 ## Create LUT with largest probability of T1 value
@@ -125,4 +128,4 @@ with open(f'examples/outputs/distr_{num_trials}.npy', 'wb') as f:
 # plotting.plot_img(t1_map_nifti, cut_coords=(15, 5, 30), cmap='gray', axes=ax, colorbar=True)
 # ax.set_title('T1 Map Image')
 
-plt.show()
+#plt.show()
