@@ -27,7 +27,7 @@ mp2rage1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
 
 # Load data
-distr = np.load(os.path.join('examples', 'outputs', 'distr_1M_no_nan.npy'))
+distr = np.load(os.path.join('examples', 'outputs', 'counts_1M_no_nan.npy'))
 
 # Plot PDF of example points
 fig, ax = plt.subplots()

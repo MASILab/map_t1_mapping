@@ -49,7 +49,7 @@ ax.plot(mp2rage1, t1_estimate, zs=-0.5, zdir='x', color=[1,0,0,0.2])
 ax.plot(mp2rage2, t1_estimate, zs=0.5, zdir='y', color=[1,0,0,0.2])
 
 # Now simulate with noise
-distr = np.zeros((mp2rage1.shape[0], mp2rage2.shape[0], t1_estimate.shape[0]))
+counts = np.zeros((mp2rage1.shape[0], mp2rage2.shape[0], t1_estimate.shape[0]))
 delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
 
 # Create normal distribution
@@ -74,20 +74,24 @@ for trial in tqdm(range(num_trials)):
     # Sum the number of occurrences in each voxel
     for m1, m2, t1 in zip(mp2rage1_noisy, mp2rage2_noisy, t1_estimate):
         coord = (round((m1+0.5)/delta_m)-1, round((m2+0.5)/delta_m)-1, round(t1/delta_t1)-1)
-        distr[coord] += 1
+        counts[coord] += 1
 
 ax.legend()
 
 # Create pdf for each voxel
+distr = np.zeros((mp2rage1.shape[0], mp2rage2.shape[0], t1_estimate.shape[0]))
 for i in range(distr.shape[0]):
     for j in range(distr.shape[1]):
         # Need to normalize and flip (since indices went high to low)
-        sum = np.sum(distr[i,j,:])
+        sum = np.sum(counts[i,j,:])
         if sum == 0:
-            distr[i,j,:] = np.zeros(distr[i,j,:].shape)
+            distr[i,j,:] = np.zeros(counts[i,j,:].shape)
         else:
-            distr[i,j,:] = distr[i,j,:]/(delta_t1*sum)
+            distr[i,j,:] = counts[i,j,:]/(delta_t1*sum)
             distr[i,j,:] = distr[i,j,::-1]
+
+# Also flip counts
+counts = counts[:,:,::-1]
 
 # Plot PDF of example points
 fig, ax = plt.subplots()
@@ -102,6 +106,8 @@ ax.legend()
 # Save PDFs to file for later use
 with open(f'examples/outputs/distr_{int(num_trials//1e6)}M_no_nan.npy', 'wb') as f:
     np.save(f, distr)
+with open(f'examples/outputs/counts_{int(num_trials//1e6)}M_no_nan.npy', 'wb') as f:
+    np.save(f, counts)
 
 ## Create LUT with largest probability of T1 value
 #LUT = t1_estimate[np.argmax(distr, axis=2)]
