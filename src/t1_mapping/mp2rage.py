@@ -80,6 +80,8 @@ class MP2RAGESubject():
             Quantitative T1 map
         mp2rage : list of nibabel.nifti1.Nifti1Image
             List of pairwise MP2RAGE T1-weighted images (0,1), (0,2), ... (1,2), ...
+        acq_params : list of acquisition parameters
+        eqn_params : list of equation parameters
         """
         self.subject = subject
         self.scan = scan
