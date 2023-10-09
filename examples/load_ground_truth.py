@@ -8,22 +8,20 @@ from scipy.io import loadmat
 import matplotlib.pyplot as plt
 
 # Load data
-subj_id = 334264
+subj_id = 334317
 subj_path = os.path.join(t1_mapping.definitions.GROUND_TRUTH, f'filteredData_{subj_id}.mat')
 subj = loadmat(subj_path, variable_names=['R1fs', 'MD_SIR'])
 
 # Calculate affine
 spacing = np.squeeze(subj['MD_SIR']['Spc'][0][0])
-rot_matrix = (subj['MD_SIR']['Orientation'][0][0] @ np.diag(spacing))
+R = subj['MD_SIR']['Orientation'][0][0]
+flip_elem = np.array([[1,0,1],[1,0,1],[0,1,0]]).astype(bool)
+R[flip_elem] = -R[flip_elem]
+rot_matrix = R @ np.diag(spacing)
 trans_vector = np.squeeze(subj['MD_SIR']['Origin'][0][0])
 affine = np.eye(4)
 affine[0:3,0:3] = rot_matrix
 affine[0:3,3] = trans_vector
-print(affine) 
-
-# Load affine from other NIFTI
-subj_t1w = nib.load('/nfs/masi/saundam1/outputs/mp2rage_sir_qmt/334264/12.nii')
-affine = subj_t1w.affine
 print(affine)
 
 def do_reorientation(data_array, init_axcodes, final_axcodes):
@@ -49,11 +47,8 @@ def do_reorientation(data_array, init_axcodes, final_axcodes):
 
     return data_reoriented
 
-# reoriented = do_reorientation(subj['R1fs'], ('P', 'L', 'S'), ('L', 'A', 'S'))
-
 reoriented = do_reorientation(subj['R1fs'], ('P', 'R', 'S'), ('R', 'A', 'S'))
 
 subj_nifti = nib.nifti1.Nifti1Image(reoriented, affine)
-print(subj_nifti.shape)
 
 subj_nifti.to_filename('examples/outputs/example_ground_truth.nii.gz')
