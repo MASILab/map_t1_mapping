@@ -41,32 +41,36 @@ for file in tqdm(glob(os.path.join(t1_mapping.definitions.GROUND_TRUTH_MAT, '*.m
     subj = loadmat(file, variable_names=['R1fs', 'MD_SIR'])
 
     # Calculate affine
-    spacing = np.squeeze(subj['MD_SIR']['Spc'][0][0])
-    R = subj['MD_SIR']['Orientation'][0][0]
-    flip_elem = np.array([[1,0,1],[1,0,1],[0,1,0]]).astype(bool)
-    R[flip_elem] = -R[flip_elem]
-    rot_matrix = R @ np.diag(spacing)
-    trans_vector = np.squeeze(subj['MD_SIR']['Origin'][0][0])
-    affine = np.eye(4)
-    affine[0:3,0:3] = rot_matrix
-    affine[0:3,3] = trans_vector
+    # spacing = np.squeeze(subj['MD_SIR']['Spc'][0][0])
+    # R = subj['MD_SIR']['Orientation'][0][0]
+    # flip_elem = np.array([[1,0,1],[1,0,1],[0,1,0]]).astype(bool)
+    # R[flip_elem] = -R[flip_elem]
+    # rot_matrix = R @ np.diag(spacing)
+    # trans_vector = np.squeeze(subj['MD_SIR']['Origin'][0][0])
+    # affine = np.eye(4)
+    # affine[0:3,0:3] = rot_matrix
+    # affine[0:3,3] = trans_vector
 
-    # Reorient axes
-    reoriented = do_reorientation(subj['R1fs'], ('P', 'R', 'S'), ('R', 'A', 'S'))
-
-    # Calculate T1 from R1fs
-    T1 = 1/reoriented
-
-    # Save to NIFTI if possible
-    subj_nifti = nib.nifti1.Nifti1Image(T1, affine)
-    save_folder = os.path.join(t1_mapping.definitions.GROUND_TRUTH_DATA, str(subj_id))
-    save_path = os.path.join(save_folder, 'filtered_t1_map.nii')
+    # Get affine from NIFTIs generated from PAR/REC files
+    nifti_files = glob(os.path.join(t1_mapping.definitions.GROUND_TRUTH_DATA, str(subj_id), '*_real.nii'))
     try:
+        readouts = nib.load(nifti_files[0])
+        affine = readouts.affine
+
+        # Reorient axes
+        reoriented = do_reorientation(subj['R1fs'], ('P', 'R', 'S'), ('R', 'A', 'S'))
+
+        # Calculate T1 from R1fs
+        T1 = 1/reoriented
+
+        # Save to NIFTI if possible
+        subj_nifti = nib.nifti1.Nifti1Image(T1, affine)
+        save_folder = os.path.join(t1_mapping.definitions.GROUND_TRUTH_DATA, str(subj_id))
+        save_path = os.path.join(save_folder, 'filtered_t1_map.nii')
+
         subj_nifti.to_filename(save_path)
 
         # Update progress
         tqdm.write(f'Saved {subj_id} to {save_path}')
-    except FileNotFoundError:
-        tqdm.write(f'Creating folder for {subj_id}')
-        os.mkdir(save_folder)
-        subj_nifti.to_filename(save_path)
+    except:
+        tqdm.write(f'No data found for {subj_id}')
