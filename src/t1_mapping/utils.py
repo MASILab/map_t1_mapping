@@ -1,8 +1,13 @@
 import numpy as np
+import os
+import nibabel as nib
+import json
 import matplotlib.pyplot as plt
+from typing import TypedDict
 from nibabel.affines import apply_affine
+import t1_mapping.definitions
 
-def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
+def gre_signal(T1, TD, TR, flip_angles, n, eff):
     """
     Returns the values for the gradient echo blocks GRE1 and GRE2.
 
@@ -10,17 +15,17 @@ def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
     ---------
     T1 : arraylike
         T1 relaxation time in s
-    inversion_times : arraylike
-        Time in s from inversion pulse to middle of each inversion block.
-        Note that len(inversion_times) must be the same as the number of GRE readouts.
+    TD : arraylike
+        Array containing time between gradient echo readout blocks
     TR : arraylike
-        Time from one gradient echo to next in s.
-    E1_repeat = np.stack(np.reshape(E1, (1, len(E1))), axis=0)he number of GRE readouts.
-    n : list of int
-        Number of pulses in gradient echo block. If n is a list of 2 values,
-        then n is the number of pulses before and after the center of k-space.
-    eff : arraylike, optional, default=0.96
-        Inversion pulse efficiency
+        Repitition time of the gradient echo readout in s
+    flip_angles : arraylike
+        Flip angles of gradient echo pulses in rad
+    n : arraylike
+        Number of pulses within each gradient echo readout. Contains 2
+        ints for number before and after center of k-space.
+    eff : arraylike
+        Inversion efficiency of scanner
 
     Returns
     -------
@@ -28,11 +33,116 @@ def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
         n by m array containing gradient echo blocks, where n is the number
         of GRE readouts and m is the number of samples of T1.
     """
+    n_readouts = len(flip_angles)
+    n_bef = n[0]
+    n_aft = n[1]
+    n_tot = n_bef + n_aft
+
+    # Calculate exponential terms
+    E1 = np.exp(-TR/T1)
+    ED = np.exp(-TD[:,np.newaxis]/T1)
+
+    # Calculate steady-state magnetization
+    num = 1 - ED[0]
+    denom = 1 + eff*np.float_power(np.prod(np.cos(flip_angles))*E1**n_readouts, n_tot)*np.prod(ED, axis=0)
+    for k in range(0, n_readouts):
+        num = num*np.float_power(np.cos(flip_angles[k])*E1, n_tot) + \
+            (1-E1)*(1-np.float_power(np.cos(flip_angles[k])*E1, n_tot))/(1-np.cos(flip_angles[k])*E1)
+        num = num*ED[k+1] + (1-ED[k+1])
+
+    mz_ss = num/denom
+
+    # Calculate GRE signal
+    GRE = np.zeros((n_readouts, len(T1)))
+
+    temp = (-eff*mz_ss*ED[0] + (1-ED[0]))*np.float_power((np.cos(flip_angles[0])*E1), n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[0])*E1, n_bef))/(1-np.cos(flip_angles[0])*E1)
+    GRE[0,:] = temp*np.sin(flip_angles[0])
+
+    for m in range(1, n_readouts):
+        temp = temp*np.float_power(np.cos(flip_angles[m-1])*E1, n_aft) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m-1])*E1, n_aft))/(1-np.cos(flip_angles[m-1])*E1)
+        temp = (temp*ED[m] + (1-ED[m]))*np.float_power(np.cos(flip_angles[m])*E1, n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m])*E1, n_bef))/(1-np.cos(flip_angles[m])*E1)
+        GRE[m,:]= temp*np.sin(flip_angles[m])
+        
+    return GRE
+
+
+class MP2RAGEParameters(TypedDict):
+    """
+    TypedDict containing MP2RAGE acquisition parameters.
+
+    Parameters
+    ----------
+    TR : float
+        Repitition time of the gradient echo readout in s
+    MP2RAGE_TR : float
+        Time between inversion pulses in s
+    flip_angles : list of floats
+        Flip angles of gradient echo pulses in deg
+    inversion_times : list of floats
+        Time from inversion pulse to middle of each gradient echo readout
+    n : list of int
+        Number of pulses within each gradient echo readout. List containing
+        1 int or 2 ints for number before and after center of k-space.
+    eff : float
+        Inversion efficiency of scanner
+    """
+    TR: float
+    MP2RAGE_TR: float
+    flip_angles: list
+    inversion_times: list
+    n: list
+    eff: float
+
+class EquationParameters(TypedDict):
+    """
+    TypedDict containing equation parameters.
+
+    Parameters
+    ----------
+    TD : numpy.ndarray
+        Array containing time between gradient echo readout blocks
+    TR : numpy.ndarray
+        Repitition time of the gradient echo readout in s
+    flip_angles : numpy.ndarray
+        Flip angles of gradient echo pulses in rad
+    n : numpy.ndarray
+        Number of pulses within each gradient echo readout. Contains 2
+        ints for number before and after center of k-space.
+    eff : np.ndarray
+        Inversion efficiency of scanner
+    """
+    TD: np.ndarray
+    TR: np.ndarray
+    flip_angles: np.ndarray
+    n: np.ndarray
+    eff: np.ndarray
+
+def acq_to_eqn_params(acq_params):
+    """
+    Returns the equation parameters (TA, TB, TC, ...) given the acquisition
+    parameters (inversion times, flip angles, ...)
+
+    Parameters
+    ---------
+    acq_params : MP2RAGEParameters
+        TypedDict with acquisition parameters TR, MP2RAGE_TR, flip_angles, 
+        inversion_times, n and eff
+
+    Returns
+    -------
+    eqn_params : EquationParameters
+        TypedDict with equation parameters TD, TR, flip_angles, n, and eff
+    """
     # Convert to Numpy arrays
-    params = [T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n]
-    for i, p in enumerate(params):
-        params[i] = np.asarray([p]) if np.isscalar(p) else np.asarray(p)
-    (T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n) = tuple(params)
+    acq_params_arr = acq_params.copy()
+    for k, v  in acq_params.items():
+        acq_params_arr[k] = np.asarray([v]) if np.isscalar(v) else np.asarray(v)
+    TR = acq_params_arr["TR"]
+    MP2RAGE_TR = acq_params_arr["MP2RAGE_TR"]
+    flip_angles = acq_params_arr["flip_angles"]
+    inversion_times = acq_params_arr["inversion_times"]
+    n = acq_params_arr["n"]
+    eff = acq_params_arr["eff"]
 
     # Convert to radians
     flip_angles = flip_angles*np.pi/180
@@ -65,37 +175,181 @@ def gre_signal(T1, inversion_times, TR, MP2RAGE_TR, flip_angles, n, eff):
         
     # Check timing variables make sense
     if sum(TD) + n_readouts*n*TR != MP2RAGE_TR:
+        print(f'Sum: {sum(TD) + n_readouts*n*TR}')
         raise ValueError("Timing parameters are invalid. Make sure the sum of the readout times and recovery times is equal to MP2RAGE_TR.")
 
-    # Calculate exponential terms
-    E1 = np.exp(-TR/T1)
-    ED = np.exp(-TD[:,np.newaxis]/T1)
+    eqn_params = {
+        "TD": TD,
+        "TR": TR,
+        "flip_angles" : flip_angles,
+        "n": np.array([n_bef, n_aft]),
+        "eff": eff
+    }
+    return eqn_params
 
-    # Calculate steady-state magnetization
-    num = 1 - ED[0]
-    denom = 1 + eff*np.float_power(np.prod(np.cos(flip_angles))*E1**n_readouts, n)*np.prod(ED, axis=0)
-    for k in range(0, n_readouts):
-        num = num*np.float_power(np.cos(flip_angles[k])*E1, n) + \
-            (1-E1)*(1-np.float_power(np.cos(flip_angles[k])*E1, n))/(1-np.cos(flip_angles[k])*E1)
-        num = num*ED[k+1] + (1-ED[k+1])
+def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
+    """
+    Returns the MP2RAGE image formed by two gradient echo blocks.
 
-    mz_ss = num/denom
+    Parameters
+    ---------
+    GRE1 : arraylike
+        The first gradient echo block
+    GRE2 : arraylike
+        The second gradient echo block
+    robust : Boolean, optional, default=False
+        Uses robust MP2RAGE calculation (see https://doi.org/10.1371/journal.pone.0099676)
+    beta : float, optional, default=0.01
+        Offset parameter for robust MP2RAGE calculation
 
-    # Calculate GRE signal
-    GRE = np.zeros((n_readouts, len(T1)))
+    Returns
+    -------
+    MP2RAGE : ndarray
+        T1-weighted MP2RAGE image
+    """
+    
+    # Calculate MP2RAGE 
+    if robust: 
+        MP2RAGE = np.real((np.conj(GRE1)*GRE2) - beta)/(np.abs(GRE1)**2 + np.abs(GRE2)**2 + 2*beta)
+    else:
+        MP2RAGE = np.real((np.conj(GRE1)*GRE2))/(np.abs(GRE1)**2 + np.abs(GRE2)**2)
 
-    temp = (-eff*mz_ss*ED[0] + (1-ED[0]))*np.float_power((np.cos(flip_angles[0])*E1), n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[0])*E1, n_bef))/(1-np.cos(flip_angles[0])*E1)
-    GRE[0,:] = temp*np.sin(flip_angles[0])
+    # Replace NaN with 0
+    MP2RAGE = np.nan_to_num(MP2RAGE)
 
-    for m in range(1, n_readouts):
-        temp = temp*np.float_power(np.cos(flip_angles[m-1])*E1, n_aft) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m-1])*E1, n_aft))/(1-np.cos(flip_angles[m-1])*E1)
-        temp = (temp*ED[m] + (1-ED[m]))*np.float_power(np.cos(flip_angles[m])*E1, n_bef) + (1-E1)*(1-np.float_power(np.cos(flip_angles[m])*E1, n_bef))/(1-np.cos(flip_angles[m])*E1)
-        GRE[m,:]= temp*np.sin(flip_angles[m])
-        
-    return GRE
+    return MP2RAGE
 
+def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff):
+    """
+    Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
-def gre_signal_two(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
+    Parameters
+    ---------
+    inv : arraylike
+        Array containing the gradient echo readouts
+    TD : arraylike
+        Array containing time between gradient echo readout blocks
+    TR : arraylike
+        Repitition time of the gradient echo readout in s
+    flip_angles : arraylike
+        Flip angles of gradient echo pulses in rad
+    n : arraylike
+        Number of pulses within each gradient echo readout. Contains 2
+        ints for number before and after center of k-space.
+    eff : arraylike
+        Inversion efficiency of scanner
+
+    Returns
+    --------
+    t1_calc : numpy.ndarray
+        T1 map calculated from inputs
+    """
+    # Calculate T1-weighted image
+    t1w = mp2rage_t1w(inv[0], inv[1])
+
+    # # Range of values for T1
+    t1_values = np.arange(0.05, 5.01, 0.05)
+    num_points = len(t1_values)
+
+    # Calculate what values would be produced with the range for T1
+    GRE = gre_signal(
+        T1 = t1_values,
+        TD=TD,
+        TR=TR,
+        flip_angles=flip_angles,
+        n=n,
+        eff=eff
+    )
+
+    # Create estimated T1-weighted image
+    MP2RAGE = mp2rage_t1w(GRE[0,:], GRE[1,:])
+
+    # Pad LUT
+    MP2RAGE[0] = 0.5
+    MP2RAGE[-1] = -0.5
+
+    # Sort arrays
+    sorted_idx = np.argsort(MP2RAGE)
+    MP2RAGE = MP2RAGE[sorted_idx]
+    t1_values = t1_values[sorted_idx]
+
+    # Calculate for desired values
+    t1_calc = np.interp(t1w.flatten(), MP2RAGE, t1_values, right=0.)
+    t1_calc = t1_calc.reshape(t1w.shape)
+
+    return t1_calc
+
+###### OLD ######
+
+def mp2rage_t1_map_old(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
+    """
+    Returns the values for the T1 map calculated from an MP2RAGE sequence.
+
+    Parameters
+    ---------
+    GRE1 : arraylike
+        The first gradient echo block
+    GRE2 : arraylike
+        The second gradient echo block
+    TA : float
+        Time from initial pulse to beginning of first GRE block in s
+    TB : float
+        Time from end of first GRE block to beginning of second block in s
+    TC : float
+        Time from end of second GRE block to next pulse in s
+    TR : float
+        Time from one gradient echo to next in s
+    alpha_1 : float
+        Flip angle for first block in deg
+    alpha_2 : float
+        Flip angle for second block in deg
+    n : float
+        Number of pulses in gradient echo block
+    MP2RAGE_TR : float
+        Time from one pulse to another in s
+    eff : float
+        Inversion pulse efficiency
+    """
+    # Calculate T1-weighted image
+    t1w = mp2rage_t1w(GRE1, GRE2)
+
+    # Range of values that T1 could take
+    num_points = 1000
+    t1_values = np.linspace(0.2, 5, num_points).reshape(num_points,1)
+
+    # Calculate what values would be produced with the range for T1
+    [GRE1_calc, GRE2_calc] = gre_signal(
+        T1=t1_values,
+        TA=TA,
+        TB=TB,
+        TC=TC,
+        TR=TR,
+        alpha_1=alpha_1,
+        alpha_2=alpha_2,
+        n=n,
+        MP2RAGE_TR=MP2RAGE_TR,
+        eff=eff
+    )
+
+    # Create estimated T1-weighted image
+    t1w_calc = mp2rage_t1w(GRE1_calc, GRE2_calc).reshape(num_points, 1)
+
+    # Create LUT
+    LUT = np.hstack((t1w_calc, t1_values))
+
+    # Sort LUT so values are in numerical order
+    LUT = LUT[LUT[:, 0].argsort()]
+
+    # Create cubic interpolation
+    cs = CubicSpline(LUT[:, 0], LUT[:, 1])
+
+    # Calculate for desired values
+    t1_calc = cs(t1w.flatten())
+    t1_calc = t1_calc.reshape(t1w.shape)
+
+    return t1_calc
+    
+def gre_signal_old(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
     """
     Returns the values for the gradient echo blocks GRE1 and GRE2.
 
@@ -175,105 +429,3 @@ def gre_signal_two(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff
         GRE2 = np.sin(alpha_2)*((mz_ss - (1-EC))/(EC*np.float_power(np.cos(alpha_2)*E1, n/2)) - (1-E1)*((np.float_power(np.cos(alpha_2)*E1, -n/2)-1)/(1 - np.cos(alpha_2)*E1)))
         
     return GRE1, GRE2
-
-def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
-    """
-    Returns the MP2RAGE image formed by two gradient echo blocks.
-
-    Parameters
-    ---------
-    GRE1 : arraylike
-        The first gradient echo block
-    GRE2 : arraylike
-        The second gradient echo block
-    robust : Boolean, optional, default=False
-        Uses robust MP2RAGE calculation (see https://doi.org/10.1371/journal.pone.0099676)
-    beta : float, optional, default=0.01
-        Offset parameter for robust MP2RAGE calculation
-
-    Returns
-    -------
-    MP2RAGE : ndarray
-        T1-weighted MP2RAGE image
-    """
-    
-    # Calculate MP2RAGE 
-    if robust: 
-        MP2RAGE = np.real((np.conj(GRE1)*GRE2) - beta)/(np.abs(GRE1)**2 + np.abs(GRE2)**2 + 2*beta)
-    else:
-        MP2RAGE = np.real((np.conj(GRE1)*GRE2))/(np.abs(GRE1)**2 + np.abs(GRE2)**2)
-
-    # Replace NaN with 0
-    MP2RAGE = np.nan_to_num(MP2RAGE)
-
-    return MP2RAGE
-
-def mp2rage_t1_map(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
-    """
-    Returns the values for the T1 map calculated from an MP2RAGE sequence.
-
-    Parameters
-    ---------
-    GRE1 : arraylike
-        The first gradient echo block
-    GRE2 : arraylike
-        The second gradient echo block
-    TA : float
-        Time from initial pulse to beginning of first GRE block in s
-    TB : float
-        Time from end of first GRE block to beginning of second block in s
-    TC : float
-        Time from end of second GRE block to next pulse in s
-    TR : float
-        Time from one gradient echo to next in s
-    alpha_1 : float
-        Flip angle for first block in deg
-    alpha_2 : float
-        Flip angle for second block in deg
-    n : float
-        Number of pulses in gradient echo block
-    MP2RAGE_TR : float
-        Time from one pulse to another in s
-    eff : float
-        Inversion pulse efficiency
-    """
-    # Calculate T1-weighted image
-    t1w = mp2rage_t1w(GRE1, GRE2)
-
-    # Range of values that T1 could take
-    num_points = 1000
-    t1_values = np.linspace(0.2, 5, num_points).reshape(num_points,1)
-
-    # Calculate what values would be produced with the range for T1
-    [GRE1_calc, GRE2_calc] = gre_signal(
-        T1=t1_values,
-        TA=TA,
-        TB=TB,
-        TC=TC,
-        TR=TR,
-        alpha_1=alpha_1,
-        alpha_2=alpha_2,
-        n=n,
-        MP2RAGE_TR=MP2RAGE_TR,
-        eff=eff
-    )
-
-    # Create estimated T1-weighted image
-    t1w_calc = mp2rage_t1w(GRE1_calc, GRE2_calc).reshape(num_points, 1)
-
-    # Create LUT
-    LUT = np.hstack((t1w_calc, t1_values))
-
-    # Sort LUT so values are in numerical order
-    LUT = LUT[LUT[:, 0].argsort()]
-
-    # Create cubic interpolation
-    cs = CubicSpline(LUT[:, 0], LUT[:, 1])
-
-    # Calculate for desired values
-    t1_calc = cs(t1w.flatten())
-    t1_calc = t1_calc.reshape(t1w.shape)
-
-    return t1_calc
-    
-# def mp2rage_signal(nimages, MP2RAGE_TR, inv_times, n, FLASH_TR, flipangle, T1, eff=0.84)

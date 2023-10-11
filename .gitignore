@@ -159,6 +159,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Ignore .vscode and all NIFTIs
+# Ignore .vscode, all saved NumPy arrays and all NIFTIs
 *.nii*
 .vscode/
+*.npy
+
+# Ignore NFS files
+.nfs*
