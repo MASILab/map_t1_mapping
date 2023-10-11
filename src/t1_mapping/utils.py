@@ -220,7 +220,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='marques'):
+def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear'):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
@@ -239,15 +239,15 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='marques'):
         ints for number before and after center of k-space.
     eff : arraylike
         Inversion efficiency of scanner
-    method : str, default='marques'
-        Method for calculating T1 map. Can be 'marques', 'cubic' or 'likelihood'.
+    method : str, default='linear'
+        Method for calculating T1 map. Can be 'linear', 'cubic' or 'likelihood'.
 
     Returns
     --------
     t1_calc : numpy.ndarray
         T1 map calculated from inputs
     """
-    if method == 'marques':
+    if method == 'linear':
         # Calculate T1-weighted image
         t1w = mp2rage_t1w(inv[0], inv[1])
 
@@ -280,7 +280,7 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='marques'):
         # Calculate for desired values
         t1_calc = np.interp(t1w.flatten(), MP2RAGE, t1_values, right=0.)
         t1_calc = t1_calc.reshape(t1w.shape)
-        
+
     elif method == 'cubic':
         # Calculate T1-weighted image
         t1w = mp2rage_t1w(inv[0], inv[1])
@@ -319,6 +319,6 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='marques'):
     elif method == 'likelihood':
         raise NotImplementedError('Likelihood method has not been implemented yet.')
     else:
-        raise ValueError("Invalid value for 'method'. Valid values are 'marques', 'cubic' or 'likelihood'.")
+        raise ValueError("Invalid value for 'method'. Valid values are 'linear', 'cubic' or 'likelihood'.")
 
     return t1_calc
