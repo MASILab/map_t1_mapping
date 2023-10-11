@@ -156,23 +156,3 @@ class MP2RAGESubject():
             for j in range(i+1, len(self.inv)):
                 mp2rage.append(t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64)))
         return mp2rage
-
-# class MP2RAGEDataset():
-#     def __init__(self):
-#         """
-#         Provides an interface between MP2RAGE dataset and calculation of T1-weighted image and T1 map.
-
-#         Assumes a file structure of [subject]/[scan_name]/[scan_num]/[scan]
-
-#         Parameters
-#         ----------
-#         dataset_path : t1w_niftistr
-#             Path to directory containing the subjects
-#         subjects_df : pandas.DataFrame
-#             DataFrame containing 'subject', 'scan_name', 'scan_num' to use
-#         output_path : str
-#             Path to directory to place output T1 maps
-#         """
-#         self.inv1 = inv1
-#         self.inv2 = inv2
-#         self.acq_params = acq_params
