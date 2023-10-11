@@ -9,8 +9,14 @@ import matplotlib.pyplot as plt
 from nilearn.plotting import plot_anat
 
 # Load data
-subj_id = 334264
-t1_lut = nib.load(os.path.join(t1_mapping.definitions.T1_MAPS_LUT, str(subj_id), 't1_map.nii'))
+subj_id = '334264'
+# Create MP2RAGE subject with only first two inversion times
+subj = t1_mapping.mp2rage.MP2RAGESubject(
+    subject=subj_id,
+    scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
+    scan_times=['1010', '3310']
+)
+t1_lut = subj.t1_map
 t1_truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_affine', str(subj_id), 'Warped.nii.gz'))
 
 # Mask LUT by zero values of ground truth
@@ -22,5 +28,5 @@ t1_lut_masked = nib.Nifti1Image(t1_lut_data_masked, t1_lut.affine)
 
 # Generate Bland-Altman plot
 fig, ax = plt.subplots()
-mean_diff_plot(t1_lut_data_masked.flatten()[::50], t1_truth_data.flatten()[::50], ax=ax, sd_limit=50)
+mean_diff_plot(t1_lut_data_masked.flatten()[::50], t1_truth_data.flatten()[::50], ax=ax)
 plt.show()

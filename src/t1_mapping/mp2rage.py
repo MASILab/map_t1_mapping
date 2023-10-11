@@ -49,7 +49,7 @@ class MP2RAGEFitter():
     @cached_property
     def t1_map(self):
         if len(self.inv) == 2:
-            t1_map = t1_mapping.utils.mp2rage_t1_map([self.get_inv_data(0), self.get_inv_data(1)], **self.eqn_params)
+            t1_map = t1_mapping.utils.mp2rage_t1_map([self.get_inv_data(0), self.get_inv_data(1)], **self.eqn_params, method='cubic')
         else:
             t1_map = np.zeros(self.get_inv_data(0).shape)
         return nib.nifti1.Nifti1Image(t1_map, self._affine)

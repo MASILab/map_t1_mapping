@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from typing import TypedDict
 from nibabel.affines import apply_affine
 import t1_mapping.definitions
+from scipy.interpolate import CubicSpline
 
 def gre_signal(T1, TD, TR, flip_angles, n, eff):
     """
@@ -219,7 +220,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff):
+def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='marques'):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
@@ -238,194 +239,86 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff):
         ints for number before and after center of k-space.
     eff : arraylike
         Inversion efficiency of scanner
+    method : str, default='marques'
+        Method for calculating T1 map. Can be 'marques', 'cubic' or 'likelihood'.
 
     Returns
     --------
     t1_calc : numpy.ndarray
         T1 map calculated from inputs
     """
-    # Calculate T1-weighted image
-    t1w = mp2rage_t1w(inv[0], inv[1])
+    if method == 'marques':
+        # Calculate T1-weighted image
+        t1w = mp2rage_t1w(inv[0], inv[1])
 
-    # # Range of values for T1
-    t1_values = np.arange(0.05, 5.01, 0.05)
-    num_points = len(t1_values)
+        # # Range of values for T1
+        t1_values = np.arange(0.05, 5.01, 0.05)
+        num_points = len(t1_values)
 
-    # Calculate what values would be produced with the range for T1
-    GRE = gre_signal(
-        T1 = t1_values,
-        TD=TD,
-        TR=TR,
-        flip_angles=flip_angles,
-        n=n,
-        eff=eff
-    )
+        # Calculate what values would be produced with the range for T1
+        GRE = gre_signal(
+            T1 = t1_values,
+            TD=TD,
+            TR=TR,
+            flip_angles=flip_angles,
+            n=n,
+            eff=eff
+        )
 
-    # Create estimated T1-weighted image
-    MP2RAGE = mp2rage_t1w(GRE[0,:], GRE[1,:])
+        # Create estimated T1-weighted image
+        MP2RAGE = mp2rage_t1w(GRE[0,:], GRE[1,:])
 
-    # Pad LUT
-    MP2RAGE[0] = 0.5
-    MP2RAGE[-1] = -0.5
+        # Pad LUT
+        MP2RAGE[0] = 0.5
+        MP2RAGE[-1] = -0.5
 
-    # Sort arrays
-    sorted_idx = np.argsort(MP2RAGE)
-    MP2RAGE = MP2RAGE[sorted_idx]
-    t1_values = t1_values[sorted_idx]
+        # Sort arrays
+        sorted_idx = np.argsort(MP2RAGE)
+        MP2RAGE = MP2RAGE[sorted_idx]
+        t1_values = t1_values[sorted_idx]
 
-    # Calculate for desired values
-    t1_calc = np.interp(t1w.flatten(), MP2RAGE, t1_values, right=0.)
-    t1_calc = t1_calc.reshape(t1w.shape)
-
-    return t1_calc
-
-###### OLD ######
-
-def mp2rage_t1_map_old(GRE1, GRE2, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff):
-    """
-    Returns the values for the T1 map calculated from an MP2RAGE sequence.
-
-    Parameters
-    ---------
-    GRE1 : arraylike
-        The first gradient echo block
-    GRE2 : arraylike
-        The second gradient echo block
-    TA : float
-        Time from initial pulse to beginning of first GRE block in s
-    TB : float
-        Time from end of first GRE block to beginning of second block in s
-    TC : float
-        Time from end of second GRE block to next pulse in s
-    TR : float
-        Time from one gradient echo to next in s
-    alpha_1 : float
-        Flip angle for first block in deg
-    alpha_2 : float
-        Flip angle for second block in deg
-    n : float
-        Number of pulses in gradient echo block
-    MP2RAGE_TR : float
-        Time from one pulse to another in s
-    eff : float
-        Inversion pulse efficiency
-    """
-    # Calculate T1-weighted image
-    t1w = mp2rage_t1w(GRE1, GRE2)
-
-    # Range of values that T1 could take
-    num_points = 1000
-    t1_values = np.linspace(0.2, 5, num_points).reshape(num_points,1)
-
-    # Calculate what values would be produced with the range for T1
-    [GRE1_calc, GRE2_calc] = gre_signal(
-        T1=t1_values,
-        TA=TA,
-        TB=TB,
-        TC=TC,
-        TR=TR,
-        alpha_1=alpha_1,
-        alpha_2=alpha_2,
-        n=n,
-        MP2RAGE_TR=MP2RAGE_TR,
-        eff=eff
-    )
-
-    # Create estimated T1-weighted image
-    t1w_calc = mp2rage_t1w(GRE1_calc, GRE2_calc).reshape(num_points, 1)
-
-    # Create LUT
-    LUT = np.hstack((t1w_calc, t1_values))
-
-    # Sort LUT so values are in numerical order
-    LUT = LUT[LUT[:, 0].argsort()]
-
-    # Create cubic interpolation
-    cs = CubicSpline(LUT[:, 0], LUT[:, 1])
-
-    # Calculate for desired values
-    t1_calc = cs(t1w.flatten())
-    t1_calc = t1_calc.reshape(t1w.shape)
-
-    return t1_calc
-    
-def gre_signal_old(T1, TA, TB, TR, alpha_1, alpha_2, n, MP2RAGE_TR, TC=None, eff=0.96, method='code'):
-    """
-    Returns the values for the gradient echo blocks GRE1 and GRE2.
-
-    Parameters
-    ---------
-    T1 : arraylike
-        T1 relaxation time in s
-    TA : arraylike
-        Time from initial pulse to beginning of first GRE block in s
-    TB : arraylike
-        Time from end of first GRE block to beginning of second block in s
-    TR : arraylike
-        Time from one gradient echo to next in s
-    alpha_1 : arraylike
-        Flip angle for first block in deg
-    alpha_2 : arraylike
-        Flip angle for second block in deg
-    n : arraylike
-        Number of pulses in gradient echo block
-    MP2RAGE_TR : arraylike
-        Time from one pulse to another in s
-    TC : arraylike, optional
-        Time from end of second GRE block to next pulse in s. Calculated if not provided.
-    eff : arraylike, optional, default=0.96
-        Inversion pulse efficiency
-    method : string, optional, default='code'
-        Perform calculations using equations from 'code' (GitHub repository) 
-        or 'paper' for equations presented in paper. Both provide same results.
-
-    Returns
-    -------
-    GRE1: ndarray
-        First gradient echo block
-    GRE2: ndarray
-        Second gradient echo block
-    """
-    # Assign TC if not given
-    if TC is None:
-        TC = MP2RAGE_TR - (TA + TB + 2*n*TR)
-        print(f'Setting TC to {TC}')
-
-    # Check timing variables make sense
-    if TA + TB + TC + 2*n*TR != MP2RAGE_TR:
-        raise ValueError("Timing parameters are invalid. TA + TB + TC + 2*n*TR must equal MP2RAGE_TR.")
-
-    # Convert alpha_1 and alpha_2 to radians
-    alpha_1 = alpha_1*np.pi/180
-    alpha_2 = alpha_2*np.pi/180
-    
-    params = [T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff]
-
-    # Convert to Numpy arrays
-    for i, p in enumerate(params):
-        params[i] = np.asarray([p]) if np.isscalar(p) else np.asarray(p)
-    (T1, TA, TB, TC, TR, alpha_1, alpha_2, n, MP2RAGE_TR, eff) = tuple(params)
-
-    # Calculate exponential terms
-    E1 = np.exp(-TR/T1)
-    EA = np.exp(-TA/T1)
-    EB = np.exp(-TB/T1)
-    EC = np.exp(-TC/T1)
-    
-    # Calculate steady-state magnetization
-    mz_ss = (((((1-EA)*np.float_power(np.cos(alpha_1)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n))/(1-np.cos(alpha_2)*E1))*EC + (1-EC))/(1 + eff*np.float_power(np.cos(alpha_1)*np.cos(alpha_2), n)*np.exp(-MP2RAGE_TR/T1))
-    
-    # Calculate gradient echo blocks
-    if method == 'code':
-        # GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))
-        # GRE2 = np.sin(alpha_2)*(((((-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1))*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1))
-        term1 = (-eff*mz_ss*EA + (1-EA))*np.float_power((np.cos(alpha_1)*E1), n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
-        GRE1 = term1*np.sin(alpha_1)
-        term2 = term1*np.float_power(np.cos(alpha_1)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2))/(1-np.cos(alpha_1)*E1)
-        term3 = (term2*EB + (1-EB))*np.float_power(np.cos(alpha_2)*E1, n/2) + (1-E1)*(1-np.float_power(np.cos(alpha_2)*E1, n/2))/(1-np.cos(alpha_2)*E1)
-        GRE2 = term3*np.sin(alpha_2)
-    elif method == 'paper':
-        GRE1 = np.sin(alpha_1)*((-eff*mz_ss*EA + (1-EA))*np.float_power(np.cos(alpha_1)*E1, n/2-1) + (1-E1)*(1-np.float_power(np.cos(alpha_1)*E1, n/2-1))/(1-np.cos(alpha_1)*E1))
-        GRE2 = np.sin(alpha_2)*((mz_ss - (1-EC))/(EC*np.float_power(np.cos(alpha_2)*E1, n/2)) - (1-E1)*((np.float_power(np.cos(alpha_2)*E1, -n/2)-1)/(1 - np.cos(alpha_2)*E1)))
+        # Calculate for desired values
+        t1_calc = np.interp(t1w.flatten(), MP2RAGE, t1_values, right=0.)
+        t1_calc = t1_calc.reshape(t1w.shape)
         
-    return GRE1, GRE2
+    elif method == 'cubic':
+        # Calculate T1-weighted image
+        t1w = mp2rage_t1w(inv[0], inv[1])
+
+        # Range of values that T1 could take
+        num_points = 1000
+        t1_values = np.linspace(0.2, 5, num_points)
+
+        # Calculate what values would be produced with the range for T1
+        GRE = gre_signal(
+            T1 = t1_values,
+            TD=TD,
+            TR=TR,
+            flip_angles=flip_angles,
+            n=n,
+            eff=eff
+        )
+
+        # Create estimated T1-weighted image
+        t1w_calc = mp2rage_t1w(GRE[0,:], GRE[1,:])
+
+        # Create LUT
+        LUT = np.hstack((t1w_calc.reshape(num_points,1), t1_values.reshape(num_points,1)))
+
+        # Sort LUT so values are in numerical order
+        LUT = LUT[LUT[:, 0].argsort()]
+
+        # Create cubic interpolation
+        cs = CubicSpline(LUT[:, 0], LUT[:, 1])
+
+        # Calculate for desired values
+        t1_calc = cs(t1w.flatten())
+        t1_calc = t1_calc.reshape(t1w.shape)
+
+        return t1_calc
+    elif method == 'likelihood':
+        raise NotImplementedError('Likelihood method has not been implemented yet.')
+    else:
+        raise ValueError("Invalid value for 'method'. Valid values are 'marques', 'cubic' or 'likelihood'.")
+
+    return t1_calc
