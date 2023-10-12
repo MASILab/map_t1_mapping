@@ -56,7 +56,9 @@ delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
 sd = 0.005
 s = np.random.default_rng()
 
-num_trials = 100_000_000
+num_trials = 1_000
+points = np.zeros((num_trials*num_points, 3), dtype=np.float16)
+point_num = 0
 for trial in tqdm(range(num_trials)):
 
     # Calculate MP2RAGE images with noisy GRE
@@ -75,6 +77,9 @@ for trial in tqdm(range(num_trials)):
     for m1, m2, t1 in zip(mp2rage1_noisy, mp2rage2_noisy, t1_estimate):
         coord = (round((m1+0.5)/delta_m)-1, round((m2+0.5)/delta_m)-1, round(t1/delta_t1)-1)
         counts[coord] += 1
+
+        points[point_num, :] = (m1, m2, t1)
+        point_num += 1
 
 ax.legend()
 
@@ -104,11 +109,13 @@ ax.set_title('PDF for several values of MP2RAGE_1 and MP2RAGE_2')
 ax.legend()
 
 # Save PDFs to file for later use
-with open(f'examples/outputs/distr_{int(num_trials//1e6)}M_no_nan.npy', 'wb') as f:
+os.path.join(t1_mapping.definitions.SIMULATION_DATA)
+with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'distr_{int(num_trials//1e3)}K_no_nan.npy'), 'wb') as f:
     np.save(f, distr)
-with open(f'examples/outputs/counts_{int(num_trials//1e6)}M_no_nan.npy', 'wb') as f:
+with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials//1e3)}K_no_nan.npy'), 'wb') as f:
     np.save(f, counts)
-
+with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'points_{int(num_trials//1e3)}K_no_nan.npy'), 'wb') as f:
+    np.save(f, points)
 ## Create LUT with largest probability of T1 value
 #LUT = t1_estimate[np.argmax(distr, axis=2)]
 #
