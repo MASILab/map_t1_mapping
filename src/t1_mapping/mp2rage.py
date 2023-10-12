@@ -26,6 +26,8 @@ class MP2RAGESubject():
             List of NIFTIs loaded from scan times
         inv_json : list of dictionaries
             JSON dictionaries from subject
+        affine : ndarray
+            Affine transformation for subject position
         t1w : nibabel.nifti1.Nifti1Image
             T1-weighted MP2RAGE image
         t1_map : nibabel.nifti1.Nifti1Image
@@ -72,7 +74,7 @@ class MP2RAGESubject():
         return inv_json
 
     @property
-    def _affine(self):
+    def affine(self):
         return self.inv[0].affine
 
     @property
@@ -95,7 +97,7 @@ class MP2RAGESubject():
     @cached_property
     def t1w(self):
         t1w_array = t1_mapping.utils.mp2rage_t1w(self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64))
-        return nib.nifti1.Nifti1Image(t1w_array, self._affine)
+        return nib.nifti1.Nifti1Image(t1w_array, self.affine)
     
     @cached_property
     def t1_map(self):
@@ -109,7 +111,7 @@ class MP2RAGESubject():
                 method=method)
         else:
             t1_map = np.zeros(self.inv[0].get_fdata(dtype=np.complex64).shape)
-        return nib.nifti1.Nifti1Image(t1_map, self._affine)
+        return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
     @cached_property
     def mp2rage(self):
