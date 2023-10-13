@@ -73,6 +73,7 @@ ani = FuncAnimation(fig, update, frames=num_frames, blit=False)
 
 # Also plot alpha
 alpha = max_L_gauss / (max_L_gauss + L_uni)
+alpha = np.nan_to_num(alpha, nan=0)
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 ax.plot_surface(X, Y, alpha)
