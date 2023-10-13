@@ -31,6 +31,7 @@ fig, ax = plt.subplots()
 plot_anat(diff, cut_coords=(15, 5, 30), radiological=True, 
     axes=ax, colorbar=True)
 ax.set_title('Difference')
+diff.to_filename(t1_mapping.definitions.OUTPUTS + '/test_diff.nii')
 
 # Generate Bland-Altman plot
 fig, ax = plt.subplots()

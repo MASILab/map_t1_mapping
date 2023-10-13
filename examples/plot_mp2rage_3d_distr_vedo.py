@@ -43,10 +43,9 @@ pts = vedo.Points(points, r=10)
 pts.scale((1,1,0.2))
 
 # Generate density
-# Not correct - this counts the number of points of a regular array
 vol = pts.density().c('jet').alpha([0,1])
 r = vedo.precision(vol.info['radius'], 2)
-vol.add_scalarbar(title='Density', c='k', nlabels=2)
+vol.add_scalarbar(title='Density', c='k', nlabels=2, pos=(0.7, 0.3))
 vol.mode(1)
 
 # Customize axes
