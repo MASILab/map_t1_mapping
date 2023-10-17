@@ -33,8 +33,8 @@ delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
 L_gauss = counts / np.sum(counts * delta_m**2, axis=(0,1))
 L_gauss = np.nan_to_num(L_gauss, nan=0)
 
-L_uni = np.sum(counts*delta_t1, axis=2) / np.sum(counts*delta_t1*delta_m**2)
-L_uni = np.nan_to_num(L_uni, nan=0)
+uni_value = 1/(len(mp2rage1)*len(mp2rage2)*delta_m**2)
+L_uni = np.full((len(mp2rage1), len(mp2rage2)), uni_value)
 
 # Plot likelihood from Gaussian
 fig = plt.figure()
@@ -71,15 +71,15 @@ def update(frame):
 num_frames = 100
 ani = FuncAnimation(fig, update, frames=num_frames, blit=False)
 
-# Also plot alpha
+# Plot alpha using max likelihood
 alpha = max_L_gauss / (max_L_gauss + L_uni)
-alpha = np.nan_to_num(alpha, nan=0)
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-ax.plot_surface(X, Y, alpha)
-ax.set_xlabel('MP2RAGE_1')
-ax.set_ylabel('MP2RAGE_2')
-ax.set_zlabel(r'$\alpha$')
-ax.set_title(r'$\alpha$')
+fig3 = plt.figure()
+ax4 = fig3.add_subplot(projection='3d')
+ax4.plot_surface(X, Y, alpha)
+ax4.set_xlabel('MP2RAGE_1')
+ax4.set_ylabel('MP2RAGE_2')
+ax4.set_zlabel(r'$\alpha$')
+ax4.set_title(r'$\alpha$ using max likelihood')
+ax4.set_zlim([0, 1])
 
 plt.show()
