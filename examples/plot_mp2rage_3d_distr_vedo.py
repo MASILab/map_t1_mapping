@@ -4,15 +4,12 @@ import vedo
 import os
 import t1_mapping
 
-# Settings
-vedo.settings.use_depth_peeling = True
-
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610']
-    )
+)
 
 # Range of values for T1
 delta_t1 = 0.05
@@ -32,31 +29,45 @@ points = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'points_1K
 # Make data to plot
 X,Y,Z = np.meshgrid(mp2rage1, mp2rage2, t1_estimate)
 
-# Plotter
-plotter = vedo.Plotter(
-    size=[500, 500],
-    title='Distribution'
-)
-
-# Generate point cloud
+# Generate point cloud used to calculate density
 pts = vedo.Points(points, r=10)
+
+# Scale axes to be equal (will need to modify tick labels)
 pts.scale((1,1,0.2))
 
 # Generate density
 vol = pts.density().c('jet').alpha([0,1])
-r = vedo.precision(vol.info['radius'], 2)
-vol.add_scalarbar(title='Density', c='k', nlabels=2, pos=(0.7, 0.3))
+
+# Generate colorbar
+vol.add_scalarbar(title='Density', c='k', nlabels=2, pos=(0.8, 0.3), size=(None,500))
+
+# Specify maximum intensity projection
 vol.mode(1)
 
-# Customize axes
+# Customize axes and tick labels
 z_vals = np.linspace(0, 1, 5)
 z_labels = np.linspace(0, np.max(Z), 5)
 axes = vedo.Axes(
-    pts,
+    vol,
     z_values_and_labels=list(zip(z_vals, z_labels)),
     xtitle='MP2RAGE_1',
     ytitle='MP2RAGE_2',
     ztitle='T1 (s)'
 )
 
-vedo.show(vol, axes=axes).close()
+# Set up plotter
+plt = vedo.Plotter(interactive=False)
+
+# Add volume to plotter
+plt += vol
+
+# Show current axes
+plt.show(axes=axes, viewup='z')
+
+# Change camera angle
+for i in range(360):
+    plt.camera.Azimuth(1)
+    plt.render()
+
+# After spinning, turn to interactive mode
+plt.interactive().close()
