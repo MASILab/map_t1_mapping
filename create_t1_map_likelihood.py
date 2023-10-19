@@ -15,8 +15,9 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 )
 
 # Get T1 map and plot
+t1_map = subj.t1_map
 fig, ax = plt.subplots()
-plotting.plot_anat(subj.t1_map, cut_coords=(15, 5, 30), radiological=True, 
+plotting.plot_anat(t1_map, cut_coords=(15, 5, 30), radiological=True, 
     axes=ax, colorbar=True)
 ax.set_title('T1 Map')
 plt.show()

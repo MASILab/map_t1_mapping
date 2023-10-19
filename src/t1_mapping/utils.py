@@ -343,27 +343,25 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carl
         )
         n_readouts = len(flip_angles)
         pairs = list(itertools.combinations(range(n_readouts), 2))
+        pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
         n_pairs = len(pairs)
 
         # Calculate what MP2RAGE image would have been
         mp2rage = [mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in pairs]
-
-        # mp2rage1 = mp2rage_t1w(GRE[0,:], GRE[1,:])
-        # mp2rage2 = mp2rage_t1w(GRE[0,:], GRE[2,:])
-        # delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
         delta_m = 1/mp2rage[0].shape[0]
 
         # Calculate likelihoods
         L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=(0,1))
         L_gauss = np.nan_to_num(L_gauss, nan=0)
 
+        # Maximum likelihood of gaussian
+        max_L_gauss = np.max(L_gauss, axis=-1)
+
+        # Uniform likelihood
         m_squares = np.array([len(m) for m in mp2rage])
         total_squares = np.prod(m_squares)
         uni_value = 1/(total_squares*delta_m**n_pairs)
-        L_uni = np.full((len(mp2rage[0]), len(mp2rage[1])), uni_value)
-
-        # Maximum likelihood of gaussian
-        max_L_gauss = np.max(L_gauss, axis=-1)
+        L_uni = np.full(tuple(m_squares), uni_value)
 
         # Relative likelihood
         alpha = max_L_gauss / (max_L_gauss + L_uni)
@@ -374,16 +372,15 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carl
         t1_lut[alpha < likelihood_thresh] = 0
 
         # Create grid
-        interp = RegularGridInterpolator((mp2rage[0], mp2rage[1]), values=t1_lut,
+        interp = RegularGridInterpolator(tuple(mp2rage), values=t1_lut,
             bounds_error=False, fill_value=0, method='linear')
 
         # Calculate MP2RAGE images to get values at
-        t1w1 = mp2rage_t1w(inv[0], inv[1])
-        t1w2 = mp2rage_t1w(inv[0], inv[2])
+        t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
 
         # Interpolate along new values
-        pts = (t1w1.flatten(), t1w2.flatten())
-        t1_calc = interp(pts).reshape(t1w1.shape)
+        pts = tuple([t.flatten() for t in t1w])
+        t1_calc = interp(pts).reshape(t1w[0].shape)
 
     else:
         raise ValueError("Invalid value for 'method'. Valid values are 'linear', 'cubic' or 'likelihood'.")
