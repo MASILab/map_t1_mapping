@@ -1,2 +1,1 @@
-import t1_mapping.mp2rage
-import t1_mapping.definitions
+from . import mp2rage, definitions

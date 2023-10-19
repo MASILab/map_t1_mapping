@@ -6,56 +6,8 @@ import numpy as np
 import os
 import json
 
-class MP2RAGEFitter():
-    def __init__(self, inv, acq_params: t1_mapping.utils.MP2RAGEParameters):
-        """
-        Fitter for calculations using an MP2RAGE sequence
-
-        Parameters
-        ----------
-        inv : list of nibabel.nifti1.Nifti1Image
-            List of gradient echo readouts, stored as NIFTI images
-        acq_params : MP2RAGEParameters
-            TypedDict containing acquisition parameters
-
-        Attributes
-        ----------
-        t1w : nibabel.nifti1.Nifti1Image
-            T1-weighted MP2RAGE image
-        t1_map : nibabel.nifti1.Nifti1Image
-            Quantitative T1 map
-        """
-        self.inv = inv
-        self.acq_params = acq_params
-        self.eqn_params = t1_mapping.utils.acq_to_eqn_params(acq_params)
-        
-        # Affine for later use
-        self._affine = inv[0].affine
-
-        # Initialize cached list of data so we don't have to recalculate
-        self._inv_data = [None] * len(self.inv)
-
-    def get_inv_data(self, index):
-        if self._inv_data[index] is None:
-            self._inv_data[index] = np.asanyarray(self.inv[index].get_fdata(dtype=np.complex64))
-        return self._inv_data[index]
-
-
-    @cached_property
-    def t1w(self):
-        t1w_array = t1_mapping.utils.mp2rage_t1w(self.get_inv_data(0), self.get_inv_data(1))
-        return nib.nifti1.Nifti1Image(t1w_array, self._affine)
-    
-    @cached_property
-    def t1_map(self):
-        if len(self.inv) == 2:
-            t1_map = t1_mapping.utils.mp2rage_t1_map([self.get_inv_data(0), self.get_inv_data(1)], **self.eqn_params)
-        else:
-            t1_map = np.zeros(self.get_inv_data(0).shape)
-        return nib.nifti1.Nifti1Image(t1_map, self._affine)
-
 class MP2RAGESubject():
-    def __init__(self, subject, scan, scan_times):
+    def __init__(self, subject, scan, scan_times, monte_carlo=None):
         """
         Class to store MP2RAGE subject data
 
@@ -67,6 +19,8 @@ class MP2RAGESubject():
             Full scan name
         scan_times : list of str
             List of scan times to load
+        monte_carlo : str
+            Monte Carlo simulation counts used for likelihood method
 
         Attributes
         --------
@@ -74,6 +28,8 @@ class MP2RAGESubject():
             List of NIFTIs loaded from scan times
         inv_json : list of dictionaries
             JSON dictionaries from subject
+        affine : ndarray
+            Affine transformation for subject position
         t1w : nibabel.nifti1.Nifti1Image
             T1-weighted MP2RAGE image
         t1_map : nibabel.nifti1.Nifti1Image
@@ -86,6 +42,7 @@ class MP2RAGESubject():
         self.subject = subject
         self.scan = scan
         self.scan_times = scan_times
+        self.monte_carlo = monte_carlo
 
         # Load dataset paths
         self.scan_num = self.scan.split('-', 1)[0]
@@ -120,6 +77,10 @@ class MP2RAGESubject():
         return inv_json
 
     @property
+    def affine(self):
+        return self.inv[0].affine
+
+    @property
     def acq_params(self):
         # Load acquisition parameters
         params : t1_mapping.utils.MP2RAGEParameters = {
@@ -133,26 +94,35 @@ class MP2RAGESubject():
         return params
 
     @property
-    def _fitter(self):
-        fitter = MP2RAGEFitter(self.inv, self.acq_params)
-        return fitter
-    
-    @property
     def eqn_params(self):
-        return self._fitter.eqn_params
+        return t1_mapping.utils.acq_to_eqn_params(self.acq_params)
 
     @cached_property
     def t1w(self):
-        return self._fitter.t1w
+        t1w_array = t1_mapping.utils.mp2rage_t1w(self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64))
+        return nib.nifti1.Nifti1Image(t1w_array, self.affine)
     
     @cached_property
     def t1_map(self):
-        return self._fitter.t1_map
+        if len(self.inv) == 2:
+            t1_map = t1_mapping.utils.mp2rage_t1_map(
+                [inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                method='linear')
+        else:
+            t1_map = t1_mapping.utils.mp2rage_t1_map(
+                [inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                method='likelihood',
+                monte_carlo=self.monte_carlo
+            )
+        return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
     @cached_property
     def mp2rage(self):
         mp2rage = []
         for i in range(len(self.inv)):
             for j in range(i+1, len(self.inv)):
-                mp2rage.append(t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64)))
+                mp2rage_data = t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64))
+                mp2rage.append(nib.Nifti1Image(mp2rage_data, self.affine))
         return mp2rage
