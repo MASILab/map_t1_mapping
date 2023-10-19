@@ -4,8 +4,9 @@ import os
 import nibabel as nib
 import nibabel.processing
 import numpy as np
-from statsmodels.graphics.agreement import mean_diff_plot
+from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
+import matplotlib
 from nilearn.plotting import plot_anat
 
 # Load data
@@ -18,22 +19,52 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 t1_lut = subj.t1_map
 t1_truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_affine', str(subj_id), 'Warped.nii.gz'))
 
-# Mask LUT by zero values of ground truth
+# Mask by zero values of ground truth
 t1_lut_data = t1_lut.get_fdata()
 t1_truth_data = t1_truth.get_fdata()
 mask = t1_truth_data > 0
-t1_lut_data_masked = t1_lut_data * mask
-t1_lut_masked = nib.Nifti1Image(t1_lut_data_masked, subj.affine)
+t1_lut_data_masked = t1_lut_data[mask > 0]
+t1_truth_data_masked = t1_truth_data[mask > 0]
 
-# Plot difference
-diff = nib.Nifti1Image(t1_lut_data_masked - t1_truth_data, subj.affine)
-fig, ax = plt.subplots()
-plot_anat(diff, cut_coords=(15, 5, 30), radiological=True, 
-    axes=ax, colorbar=True)
-ax.set_title('Difference')
-diff.to_filename(t1_mapping.definitions.OUTPUTS + '/test_diff.nii')
+# Get error and ground truth arrays
+ground_truth = t1_truth_data_masked
+error = t1_truth_data_masked - t1_lut_data_masked
 
-# Generate Bland-Altman plot
-fig, ax = plt.subplots()
-mean_diff_plot(t1_lut_data_masked.flatten()[::50], t1_truth_data.flatten()[::50], ax=ax)
+# Plot histogram
+nbins = 50
+fig, ax = plt.subplots(1,2)
+counts, xbins, ybins, hist = ax[0].hist2d(ground_truth, error, bins=[nbins, nbins], norm='log', cmap='viridis')
+ax[0].set_xlabel('Ground truth')
+ax[0].set_ylabel('Error')
+
+# Add colorbar
+cbar = fig.colorbar(hist, ax=ax[0])
+cbar.set_label('Count (log scale)')
+
+# Calculate levels we want to show on contour
+stop_exp = np.ceil(np.log10(counts.max())).astype(np.int64)
+levels = np.logspace(0, stop_exp, stop_exp + 1)
+
+# Plot contour (log scale)data = {
+#     'Ground Truth': ground_truth,
+#     'Error': error,
+# }
+# df = pd.DataFrame(data, columns=['Ground Truth', 'Error'])
+# print(df)
+# fig, ax = plt.subplots()
+# kdeplot(data=df.iloc[::100], x='Ground Truth', y='Error')
+log_counts = np.log(counts, out=np.zeros(counts.shape), where=(counts>0))
+c = ax[1].contour(counts.T, extent=[xbins.min(), xbins.max(),ybins.min(),ybins.max()], norm='log', levels=levels, cmap='viridis')
+ax[1].set_xlabel('Ground truth')
+ax[1].set_ylabel('Error')
+
+# Add colorbar (log scale)
+cbar = fig.colorbar(c, ax=ax[1])
+cbar.set_label('Count (log scale)')
+cbar.set_ticks(levels)
+tick_labels = [f'$10^{int(np.log10(p))}$' for p in levels]
+cbar.set_ticklabels(tick_labels)
+
+fig.suptitle(f'Subject {subj_id} MP2RAGE Error Density')
+
 plt.show()
