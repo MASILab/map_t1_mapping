@@ -7,7 +7,7 @@ import os
 import json
 
 class MP2RAGESubject():
-    def __init__(self, subject, scan, scan_times):
+    def __init__(self, subject, scan, scan_times, monte_carlo=None):
         """
         Class to store MP2RAGE subject data
 
@@ -19,6 +19,8 @@ class MP2RAGESubject():
             Full scan name
         scan_times : list of str
             List of scan times to load
+        monte_carlo : str
+            Monte Carlo simulation counts used for likelihood method
 
         Attributes
         --------
@@ -40,6 +42,7 @@ class MP2RAGESubject():
         self.subject = subject
         self.scan = scan
         self.scan_times = scan_times
+        self.monte_carlo = monte_carlo
 
         # Load dataset paths
         self.scan_num = self.scan.split('-', 1)[0]
@@ -101,16 +104,18 @@ class MP2RAGESubject():
     
     @cached_property
     def t1_map(self):
-        return self.get_t1_map(method='cubic')
-
-    def get_t1_map(self, method='cubic'):
         if len(self.inv) == 2:
             t1_map = t1_mapping.utils.mp2rage_t1_map(
-                [self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64)],
+                [inv.get_fdata(dtype=np.complex64) for inv in self.inv],
                 **self.eqn_params,
-                method=method)
+                method='linear')
         else:
-            t1_map = np.zeros(self.inv[0].get_fdata(dtype=np.complex64).shape)
+            t1_map = t1_mapping.utils.mp2rage_t1_map(
+                [inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                method='likelihood',
+                monte_carlo=self.monte_carlo
+            )
         return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
     @cached_property
@@ -118,5 +123,6 @@ class MP2RAGESubject():
         mp2rage = []
         for i in range(len(self.inv)):
             for j in range(i+1, len(self.inv)):
-                mp2rage.append(t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64)))
+                mp2rage_data = t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64))
+                mp2rage.append(nib.Nifti1Image(mp2rage_data, self.affine))
         return mp2rage

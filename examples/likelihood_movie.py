@@ -71,6 +71,9 @@ def update(frame):
 num_frames = 100
 ani = FuncAnimation(fig, update, frames=num_frames, blit=False)
 
+# Save
+ani.save('examples/outputs/likelihood.mp4')
+
 # Plot alpha using max likelihood
 alpha = max_L_gauss / (max_L_gauss + L_uni)
 fig3 = plt.figure()

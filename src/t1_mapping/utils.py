@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from typing import TypedDict
 from nibabel.affines import apply_affine
 import t1_mapping.definitions
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, RegularGridInterpolator
+import itertools
 
 def gre_signal(T1, TD, TR, flip_angles, n, eff):
     """
@@ -220,7 +221,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear'):
+def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
@@ -241,6 +242,10 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear'):
         Inversion efficiency of scanner
     method : str, default='linear'
         Method for calculating T1 map. Can be 'linear', 'cubic' or 'likelihood'.
+    monte_carlo : str
+        If method is 'likelihood', path to counts from Monte Carlo simulation
+    likelihood_thresh : float, default=0.5
+        If method is 'likelihood', the threshold for the acceptable relative likelihood
 
     Returns
     --------
@@ -317,7 +322,69 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear'):
 
         return t1_calc
     elif method == 'likelihood':
-        raise NotImplementedError('Likelihood method has not been implemented yet.')
+        # Load Monte Carlo simulation file
+        if monte_carlo is None:
+            raise TypeError("Argument monte_carlo must be provided if method for T1 map calculation is 'likelihood'.")
+        else:
+            counts = np.load(monte_carlo)
+
+        # Range of values for T1
+        delta_t1 = 0.05
+        t1_values = np.arange(0.05, 5.01, delta_t1)
+
+        # Calculate what values would be produced using these parameters
+        GRE = gre_signal(
+            T1 = t1_values,
+            TD=TD,
+            TR=TR,
+            flip_angles=flip_angles,
+            n=n,
+            eff=eff
+        )
+        n_readouts = len(flip_angles)
+        pairs = list(itertools.combinations(range(n_readouts), 2))
+        n_pairs = len(pairs)
+
+        # Calculate what MP2RAGE image would have been
+        mp2rage = [mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in pairs]
+
+        # mp2rage1 = mp2rage_t1w(GRE[0,:], GRE[1,:])
+        # mp2rage2 = mp2rage_t1w(GRE[0,:], GRE[2,:])
+        # delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
+        delta_m = 1/mp2rage[0].shape[0]
+
+        # Calculate likelihoods
+        L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=(0,1))
+        L_gauss = np.nan_to_num(L_gauss, nan=0)
+
+        m_squares = np.array([len(m) for m in mp2rage])
+        total_squares = np.prod(m_squares)
+        uni_value = 1/(total_squares*delta_m**n_pairs)
+        L_uni = np.full((len(mp2rage[0]), len(mp2rage[1])), uni_value)
+
+        # Maximum likelihood of gaussian
+        max_L_gauss = np.max(L_gauss, axis=-1)
+
+        # Relative likelihood
+        alpha = max_L_gauss / (max_L_gauss + L_uni)
+
+        # Create LUT
+        max_L_gauss_ind = np.argmax(L_gauss, axis=-1)
+        t1_lut = t1_values[max_L_gauss_ind]
+        t1_lut[alpha < likelihood_thresh] = 0
+
+        # Create grid
+        interp = RegularGridInterpolator((mp2rage[0], mp2rage[1]), values=t1_lut,
+            bounds_error=False, fill_value=0, method='linear')
+
+        # Calculate MP2RAGE images to get values at
+        t1w1 = mp2rage_t1w(inv[0], inv[1])
+        t1w2 = mp2rage_t1w(inv[0], inv[2])
+
+        # Interpolate along new values
+        pts = (t1w1.flatten(), t1w2.flatten())
+        t1_calc = interp(pts).reshape(t1w1.shape)
+
     else:
         raise ValueError("Invalid value for 'method'. Valid values are 'linear', 'cubic' or 'likelihood'.")
 

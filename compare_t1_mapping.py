@@ -67,4 +67,6 @@ cbar.set_ticklabels(tick_labels)
 
 fig.suptitle(f'Subject {subj_id} MP2RAGE Error Density')
 
+print(np.sum(counts*np.diff(xbins)*np.diff(ybins)))
+
 plt.show()
