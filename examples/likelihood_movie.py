@@ -7,7 +7,7 @@ from matplotlib.animation import FuncAnimation
 
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
-    subject='334264',
+    subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610']
 )
@@ -72,7 +72,7 @@ num_frames = 100
 ani = FuncAnimation(fig, update, frames=num_frames, blit=False)
 
 # Save
-ani.save('examples/outputs/likelihood.mp4')
+# ani.save('examples/outputs/likelihood.mp4')
 
 # Plot alpha using max likelihood
 alpha = max_L_gauss / (max_L_gauss + L_uni)

@@ -46,7 +46,7 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
 
     # Create MP2RAGE subject with only first two inversion times
     subj = t1_mapping.mp2rage.MP2RAGESubject(
-        subject=subject,
+        subject_id=subject,
         scan=chosen_scan,
         scan_times=times[0:2]
     )

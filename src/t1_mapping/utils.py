@@ -221,12 +221,16 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5):
+def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
     Parameters
     ---------
+    t1 : arraylike
+        Potential T1 values (e.g. an array from 0.05 to 5)
+    m : arraylike:
+        Potential MP2RAGE values calculated from t1
     inv : arraylike
         Array containing the gradient echo readouts
     TD : arraylike
@@ -256,59 +260,29 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carl
         # Calculate T1-weighted image
         t1w = mp2rage_t1w(inv[0], inv[1])
 
-        # # Range of values for T1
-        t1_values = np.arange(0.05, 5.01, 0.05)
-        num_points = len(t1_values)
-
-        # Calculate what values would be produced with the range for T1
-        GRE = gre_signal(
-            T1 = t1_values,
-            TD=TD,
-            TR=TR,
-            flip_angles=flip_angles,
-            n=n,
-            eff=eff
-        )
-
-        # Create estimated T1-weighted image
-        MP2RAGE = mp2rage_t1w(GRE[0,:], GRE[1,:])
+        # Range of values for T1
+        num_points = len(t1)
 
         # Pad LUT
-        MP2RAGE[0] = 0.5
-        MP2RAGE[-1] = -0.5
+        m = m[0] # Only need first element
+        m[0] = 0.5
+        m[-1] = -0.5
 
         # Sort arrays
-        sorted_idx = np.argsort(MP2RAGE)
-        MP2RAGE = MP2RAGE[sorted_idx]
-        t1_values = t1_values[sorted_idx]
+        sorted_idx = np.argsort(m)
+        m = m[sorted_idx]
+        t1 = t1[sorted_idx]
 
         # Calculate for desired values
-        t1_calc = np.interp(t1w.flatten(), MP2RAGE, t1_values, right=0.)
+        t1_calc = np.interp(t1w.flatten(), m, t1, right=0.)
         t1_calc = t1_calc.reshape(t1w.shape)
 
     elif method == 'cubic':
         # Calculate T1-weighted image
         t1w = mp2rage_t1w(inv[0], inv[1])
 
-        # Range of values that T1 could take
-        num_points = 1000
-        t1_values = np.linspace(0.2, 5, num_points)
-
-        # Calculate what values would be produced with the range for T1
-        GRE = gre_signal(
-            T1 = t1_values,
-            TD=TD,
-            TR=TR,
-            flip_angles=flip_angles,
-            n=n,
-            eff=eff
-        )
-
-        # Create estimated T1-weighted image
-        t1w_calc = mp2rage_t1w(GRE[0,:], GRE[1,:])
-
         # Create LUT
-        LUT = np.hstack((t1w_calc.reshape(num_points,1), t1_values.reshape(num_points,1)))
+        LUT = np.hstack((m.reshape(num_points,1), t1_values.reshape(num_points,1)))
 
         # Sort LUT so values are in numerical order
         LUT = LUT[LUT[:, 0].argsort()]
@@ -328,27 +302,10 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carl
         else:
             counts = np.load(monte_carlo)
 
-        # Range of values for T1
-        delta_t1 = 0.05
-        t1_values = np.arange(0.05, 5.01, delta_t1)
-
-        # Calculate what values would be produced using these parameters
-        GRE = gre_signal(
-            T1 = t1_values,
-            TD=TD,
-            TR=TR,
-            flip_angles=flip_angles,
-            n=n,
-            eff=eff
-        )
-        n_readouts = len(flip_angles)
+        n_pairs = len(m)
+        n_readouts = len(inv)
         pairs = list(itertools.combinations(range(n_readouts), 2))
         pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
-        n_pairs = len(pairs)
-
-        # Calculate what MP2RAGE image would have been
-        mp2rage = [mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in pairs]
-        delta_m = 1/mp2rage[0].shape[0]
 
         # Calculate likelihoods
         L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=(0,1))
@@ -358,7 +315,7 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carl
         max_L_gauss = np.max(L_gauss, axis=-1)
 
         # Uniform likelihood
-        m_squares = np.array([len(m) for m in mp2rage])
+        m_squares = np.array([len(mp2rage) for mp2rage in m])
         total_squares = np.prod(m_squares)
         uni_value = 1/(total_squares*delta_m**n_pairs)
         L_uni = np.full(tuple(m_squares), uni_value)
@@ -368,11 +325,11 @@ def mp2rage_t1_map(inv, TD, TR, flip_angles, n, eff, method='linear', monte_carl
 
         # Create LUT
         max_L_gauss_ind = np.argmax(L_gauss, axis=-1)
-        t1_lut = t1_values[max_L_gauss_ind]
-        t1_lut[alpha < likelihood_thresh] = 0
+        t1_lut = t1[max_L_gauss_ind]
+        t1_lut[alpha < likelihood_thresh] = 5
 
         # Create grid
-        interp = RegularGridInterpolator(tuple(mp2rage), values=t1_lut,
+        interp = RegularGridInterpolator(tuple(m), values=t1_lut,
             bounds_error=False, fill_value=0, method='linear')
 
         # Calculate MP2RAGE images to get values at
