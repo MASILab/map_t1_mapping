@@ -9,7 +9,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
-    subject='334264',
+    subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610']
     )
@@ -27,7 +27,7 @@ mp2rage1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
 
 # Load data
-distr = np.load(os.path.join('examples', 'outputs', 'distr_100M_no_nan.npy'))
+distr = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'distr_1K_test.npy'))
 
 # Plot PDF of example points
 fig, ax = plt.subplots()

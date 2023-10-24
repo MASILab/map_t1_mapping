@@ -1,19 +1,20 @@
 import t1_mapping.utils
 import t1_mapping.definitions
 from functools import cached_property
+import itertools
 import nibabel as nib
 import numpy as np
 import os
 import json
 
 class MP2RAGESubject():
-    def __init__(self, subject, scan, scan_times, monte_carlo=None):
+    def __init__(self, subject_id, scan, scan_times, monte_carlo=None):
         """
         Class to store MP2RAGE subject data
 
         Parameters
         ---------
-        subject : str
+        subject_id : str
             Subject number
         scan : str
             Full scan name
@@ -38,15 +39,26 @@ class MP2RAGESubject():
             List of pairwise MP2RAGE T1-weighted images (0,1), (0,2), ... (1,2), ...
         acq_params : list of acquisition parameters
         eqn_params : list of equation parameters
+        t1 : NumPy array of possible T1 values 
+        m : List of NumPy arrays of possible MP2RAGE values given t1'
+        delta_t1 : float 
+            Spacing between values of t1
+        delta_m : float
+            Spacing between values of m
         """
-        self.subject = subject
+        self.subject_id = subject_id
         self.scan = scan
         self.scan_times = scan_times
         self.monte_carlo = monte_carlo
 
         # Load dataset paths
         self.scan_num = self.scan.split('-', 1)[0]
-        self.subject_path = os.path.join(t1_mapping.definitions.DATA, self.subject, self.scan)
+        self.subject_path = os.path.join(t1_mapping.definitions.DATA, self.subject_id, self.scan)
+
+        # Create potential T1 values
+        self.delta_t1 = 0.05
+        self.t1 = np.arange(self.delta_t1, 5 + self.delta_t1, self.delta_t1)
+        self.delta_m = 1/self.t1.shape[0]
 
     @cached_property
     def inv(self):
@@ -106,12 +118,20 @@ class MP2RAGESubject():
     def t1_map(self):
         if len(self.inv) == 2:
             t1_map = t1_mapping.utils.mp2rage_t1_map(
-                [inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                t1=self.t1, 
+                delta_t1=self.delta_t1,
+                m=self.m,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
                 **self.eqn_params,
                 method='linear')
         else:
             t1_map = t1_mapping.utils.mp2rage_t1_map(
-                [inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                t1=self.t1,
+                delta_t1=self.delta_t1,
+                m=self.m,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
                 **self.eqn_params,
                 method='likelihood',
                 monte_carlo=self.monte_carlo
@@ -126,3 +146,17 @@ class MP2RAGESubject():
                 mp2rage_data = t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64))
                 mp2rage.append(nib.Nifti1Image(mp2rage_data, self.affine))
         return mp2rage
+
+    @property
+    def m(self):
+        GRE = t1_mapping.utils.gre_signal(T1=self.t1, **self.eqn_params)
+
+        n_readouts = len(self.inv_json)
+        pairs = list(itertools.combinations(range(n_readouts), 2))
+        if len(pairs) > 1:
+            # pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
+            pass
+        # Calculate what MP2RAGE image would have been
+        m = [t1_mapping.utils.mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in pairs]
+        
+        return m
