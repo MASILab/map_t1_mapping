@@ -27,20 +27,14 @@ n_inv = len(subj.scan_times)
 # Create normal distribution
 sd = 0.005
 
-# Get pairs that need to be simulated
-pairs = list(itertools.combinations(range(n_inv), 2))
-if len(pairs) > 1:
-    pairs = pairs[:-1]
-
-## Define a function to accumulate sums into the shared counts matrix for a batch of trials
+# Define a function to accumulate sums into the shared counts matrix for a batch of trials
 def accumulate_sums(iteration_range):
     counts = np.zeros(shape)
     
-    print(iteration_range)
     for trial in range(*iteration_range):
         s = np.random.default_rng(trial)
         GRE_noisy = GRE + s.normal(scale=sd, size=GRE.shape) + 1j * s.normal(scale=sd, size=GRE.shape)
-        mp2rage_noisy = [mp2rage_t1w(GRE_noisy[i[0], :], GRE_noisy[i[1], :]) for i in pairs]
+        mp2rage_noisy = [mp2rage_t1w(GRE_noisy[i[0], :], GRE_noisy[i[1], :]) for i in subj.pairs]
 
         for c in zip(*mp2rage_noisy, subj.t1):
             coord = tuple([round((i + 0.5) / subj.delta_m) - 1 for i in c[:-1]]) + (round(c[-1] / subj.delta_t1) - 1,)
@@ -49,11 +43,11 @@ def accumulate_sums(iteration_range):
     return counts
 
 if __name__ == '__main__':
-    num_trials = 1_000
+    num_trials = 1_000_000
     num_processes = 19
     iter_per_process = num_trials // num_processes
     
-    print(f'Simulating {n_inv} dimensions for {num_trials} trials using {num_processes} processes')
+    print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes')
     ranges = [(i, i + iter_per_process) for i in range(0, num_trials, iter_per_process)]
     counts = np.zeros(shape)
     with Pool(processes=num_processes) as p:
@@ -64,5 +58,5 @@ if __name__ == '__main__':
     counts = counts[..., ::-1]
     
     # Save PDFs to file for later use
-    with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials // 1e6)}M_parallel_test.npy'), 'wb') as f:
+    with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials // 1e6)}M_parallel.npy'), 'wb') as f:
         np.save(f, counts)

@@ -8,7 +8,7 @@ import os
 import json
 
 class MP2RAGESubject():
-    def __init__(self, subject_id, scan, scan_times, monte_carlo=None):
+    def __init__(self, subject_id, scan, scan_times, monte_carlo=None, all_inv_combos=False):
         """
         Class to store MP2RAGE subject data
 
@@ -22,29 +22,34 @@ class MP2RAGESubject():
             List of scan times to load
         monte_carlo : str
             Monte Carlo simulation counts used for likelihood method
+        all_inv_combos : bool, by default False
+            If True, use all combinations of inversion readouts for calculation 
+            (n choose 2). Otherwise, use sequential pairs (n - 1).
 
         Attributes
         --------
-        inv : list of nibabel.nifti1.Nifti1Image
+        inv : list of nibabel.Nifti1Image
             List of NIFTIs loaded from scan times
         inv_json : list of dictionaries
             JSON dictionaries from subject
         affine : ndarray
             Affine transformation for subject position
-        t1w : nibabel.nifti1.Nifti1Image
+        t1w : nibabel.Nifti1Image
             T1-weighted MP2RAGE image
-        t1_map : nibabel.nifti1.Nifti1Image
+        t1_map : nibabel.Nifti1Image
             Quantitative T1 map
-        mp2rage : list of nibabel.nifti1.Nifti1Image
-            List of pairwise MP2RAGE T1-weighted images (0,1), (0,2), ... (1,2), ...
+        mp2rage : list of nibabel.Nifti1Image
+            List of MP2RAGE T1-weighted images based on pairs
         acq_params : list of acquisition parameters
         eqn_params : list of equation parameters
         t1 : NumPy array of possible T1 values 
-        m : List of NumPy arrays of possible MP2RAGE values given t1'
+        m : List of NumPy arrays of possible MP2RAGE values given t1
         delta_t1 : float 
             Spacing between values of t1
         delta_m : float
             Spacing between values of m
+        pairs : list of tuples
+            List of pairs of inversions used to calculated mp2rage and m
         """
         self.subject_id = subject_id
         self.scan = scan
@@ -59,6 +64,12 @@ class MP2RAGESubject():
         self.delta_t1 = 0.05
         self.t1 = np.arange(self.delta_t1, 5 + self.delta_t1, self.delta_t1)
         self.delta_m = 1/self.t1.shape[0]
+
+        # Create pairs for inversions
+        if all_inv_combos:
+            self.pairs = list(itertools.combinations(range(n_readouts), 2))
+        else:
+            self.pairs = [(0, i+1) for i in range(len(scan_times)-1)]
 
     @cached_property
     def inv(self):
@@ -134,7 +145,8 @@ class MP2RAGESubject():
                 inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
                 **self.eqn_params,
                 method='likelihood',
-                monte_carlo=self.monte_carlo
+                monte_carlo=self.monte_carlo,
+                pairs=self.pairs
             )
         return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
@@ -152,12 +164,9 @@ class MP2RAGESubject():
         GRE = t1_mapping.utils.gre_signal(T1=self.t1, **self.eqn_params)
 
         n_readouts = len(self.inv_json)
-        pairs = list(itertools.combinations(range(n_readouts), 2))
-        if len(pairs) > 1:
-            pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
 
         # Calculate what MP2RAGE image would have been
-        m = [t1_mapping.utils.mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in pairs]
+        m = [t1_mapping.utils.mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in self.pairs]
 
         # Subtract small epsilon to ensure arrays are monotonic for interpolation
         epsilon = np.finfo(np.float64).eps
