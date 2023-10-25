@@ -67,7 +67,7 @@ class MP2RAGESubject():
 
         # Create pairs for inversions
         if all_inv_combos:
-            self.pairs = list(itertools.combinations(range(n_readouts), 2))
+            self.pairs = list(itertools.combinations(range(len(scan_times)), 2))
         else:
             self.pairs = [(0, i+1) for i in range(len(scan_times)-1)]
 

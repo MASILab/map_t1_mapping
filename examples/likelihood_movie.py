@@ -13,10 +13,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 )
 
 # Load NumPy array for counts
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M_parallel.npy'))
-
-# Calculate what values would be produced using these parameters
-GRE = t1_mapping.utils.gre_signal(T1=subj.t1, **subj.eqn_params)
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M.npy'))
 
 # Calculate likelihoods
 L_gauss = counts / np.sum(counts *subj.delta_m**2, axis=(0,1))

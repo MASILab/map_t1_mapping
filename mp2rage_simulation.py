@@ -13,7 +13,8 @@ from multiprocessing import Pool
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-    scan_times=['1010', '3310', '5610']
+    scan_times=['1010', '3310', '5610'],
+    all_inv_combos=False
 )
 
 # Calculate what values would be produced using these parameters
@@ -26,6 +27,7 @@ n_inv = len(subj.scan_times)
 
 # Create normal distribution
 sd = 0.005
+print(subj.pairs)
 
 # Define a function to accumulate sums into the shared counts matrix for a batch of trials
 def accumulate_sums(iteration_range):
@@ -58,5 +60,5 @@ if __name__ == '__main__':
     counts = counts[..., ::-1]
     
     # Save PDFs to file for later use
-    with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials // 1e6)}M_parallel.npy'), 'wb') as f:
+    with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials // 1e6)}M.npy'), 'wb') as f:
         np.save(f, counts)
