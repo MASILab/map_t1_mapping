@@ -154,9 +154,20 @@ class MP2RAGESubject():
         n_readouts = len(self.inv_json)
         pairs = list(itertools.combinations(range(n_readouts), 2))
         if len(pairs) > 1:
-            # pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
-            pass
+            pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
+
         # Calculate what MP2RAGE image would have been
         m = [t1_mapping.utils.mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in pairs]
-        
+
+        # Subtract small epsilon to ensure arrays are monotonic for interpolation
+        epsilon = np.finfo(np.float64).eps
+        for i, arr in enumerate(m):
+            diff = np.diff(arr)
+            zero_diff_indices = np.where(diff == 0)[0]
+
+            if len(zero_diff_indices) > 0:
+                arr[zero_diff_indices + 1] -= epsilon*range(1,len(zero_diff_indices)+1)
+
+            m[i] = arr
+
         return m

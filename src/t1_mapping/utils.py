@@ -308,7 +308,7 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
         pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
 
         # Calculate likelihoods
-        L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=(0,1))
+        L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=tuple(range(n_pairs)))
         L_gauss = np.nan_to_num(L_gauss, nan=0)
 
         # Maximum likelihood of gaussian
@@ -326,7 +326,7 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
         # Create LUT
         max_L_gauss_ind = np.argmax(L_gauss, axis=-1)
         t1_lut = t1[max_L_gauss_ind]
-        t1_lut[alpha < likelihood_thresh] = 5
+        t1_lut[alpha < likelihood_thresh] = 0
 
         # Create grid
         interp = RegularGridInterpolator(tuple(m), values=t1_lut,
