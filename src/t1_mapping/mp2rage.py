@@ -43,7 +43,7 @@ class MP2RAGESubject():
         acq_params : list of acquisition parameters
         eqn_params : list of equation parameters
         t1 : NumPy array of possible T1 values 
-        m : List of NumPy arrays of possible MP2RAGE values given t1
+        m : List of NumPy arrays of MP2RAGE values in Monte Carlo simulation indices
         delta_t1 : float 
             Spacing between values of t1
         delta_m : float
@@ -146,37 +146,21 @@ class MP2RAGESubject():
                 **self.eqn_params,
                 method='likelihood',
                 monte_carlo=self.monte_carlo,
-                pairs=self.pairs
+                pairs=self.pairs,
+                likelihood_thresh=0.5
             )
         return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
     @cached_property
     def mp2rage(self):
         mp2rage = []
-        for i in range(len(self.inv)):
-            for j in range(i+1, len(self.inv)):
-                mp2rage_data = t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64))
-                mp2rage.append(nib.Nifti1Image(mp2rage_data, self.affine))
+        for (i, j) in self.pairs:
+            mp2rage_data = t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64))
+            mp2rage.append(nib.Nifti1Image(mp2rage_data, self.affine))
         return mp2rage
 
     @property
     def m(self):
-        GRE = t1_mapping.utils.gre_signal(T1=self.t1, **self.eqn_params)
-
-        n_readouts = len(self.inv_json)
-
-        # Calculate what MP2RAGE image would have been
-        m = [t1_mapping.utils.mp2rage_t1w(GRE[i[0],:], GRE[i[1],:]) for i in self.pairs]
-
-        # Subtract small epsilon to ensure arrays are monotonic for interpolation
-        epsilon = np.finfo(np.float64).eps
-        for i, arr in enumerate(m):
-            diff = np.diff(arr)
-            zero_diff_indices = np.where(diff == 0)[0]
-
-            if len(zero_diff_indices) > 0:
-                arr[zero_diff_indices + 1] -= epsilon*range(1,len(zero_diff_indices)+1)
-
-            m[i] = arr
+        m = [np.arange(-0.5, 0.5, self.delta_m) for i in self.pairs]
 
         return m

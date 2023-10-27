@@ -45,7 +45,7 @@ def accumulate_sums(iteration_range):
     return counts
 
 if __name__ == '__main__':
-    num_trials = 1_000_000
+    num_trials = 100_000_000
     num_processes = 19
     iter_per_process = num_trials // num_processes
     
@@ -55,9 +55,6 @@ if __name__ == '__main__':
     with Pool(processes=num_processes) as p:
         for x in tqdm(p.imap(accumulate_sums, ranges), total=num_processes):
             counts += x
-
-    # Flip counts since T1 should be ascending
-    counts = counts[..., ::-1]
     
     # Save PDFs to file for later use
     with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials // 1e6)}M.npy'), 'wb') as f:

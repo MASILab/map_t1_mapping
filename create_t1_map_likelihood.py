@@ -5,6 +5,7 @@ import nibabel as nib
 from nilearn import plotting 
 import numpy as np
 import matplotlib.pyplot as plt
+from adam_utils.nifti import plot_nifti
 
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -16,10 +17,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 
 # Get T1 map and plot
 t1_map = subj.t1_map
-fig, ax = plt.subplots()
-plotting.plot_anat(t1_map, cut_coords=(15, 5, 30), radiological=True, 
-    axes=ax, colorbar=True)
-ax.set_title('T1 Map')
+fig, ax = plot_nifti(t1_map, title='T1 Map')
 plt.show()
 
 # Save
