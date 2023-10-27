@@ -162,5 +162,4 @@ class MP2RAGESubject():
     @property
     def m(self):
         m = [np.arange(-0.5, 0.5, self.delta_m) for i in self.pairs]
-
         return m

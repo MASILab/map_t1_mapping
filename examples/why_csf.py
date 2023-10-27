@@ -1,21 +1,22 @@
 # Investigate why CSF is being thresholded
 import os
 import t1_mapping
+from t1_mapping.utils import mp2rage_t1w
 import nibabel as nib
 from nilearn import plotting 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from adam_utils.nifti import plot_nifti
+from scipy.interpolate import RegularGridInterpolator
 
 # Load subject
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M.npy')
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M.npy')
 )
-
 print('Expected ranges of MP2RAGE images given these parameters: ', [(np.min(m), np.max(m)) for m in subj.m])
 
 # Get mask
@@ -31,10 +32,11 @@ roi = (slice(105, 110), slice(266, 282), slice(255, 272))
 roi_mask_data = np.zeros(subj.mp2rage[0].get_fdata().shape)
 roi_mask_data[roi] = 1
 
-fig, ax = plot_nifti(subj.t1_map, slice=(107, 270, 260), mask=roi_mask_data, title='CSF ROI')
+# fig, ax = plot_nifti(subj.t1_map, slice=(1self07, 270, 260), mask=roi_mask_data, title='CSF ROI')
 
 # Load NumPy array for counts
 counts = np.load(subj.monte_carlo)
+counts = np.flip(counts, axis=-1)
 n_pairs = 2
 
 # Calculate likelihoods
@@ -56,9 +58,8 @@ T = 0.5
 alpha[alpha < T] = 0
 
 # Plot alpha using max likelihood
-m1 = np.arange(-0.5, 0.5, subj.delta_m)
-# X,Y = np.meshgrid(subj.m[0], subj.m[1])
-X, Y = np.meshgrid(m1, m1)
+m = np.arange(-0.5, 0.5, subj.delta_m)
+X, Y = np.meshgrid(m, m)
 fig3 = plt.figure()
 ax4 = fig3.add_subplot(projection='3d')
 ax4.plot_surface(X, Y, alpha)
@@ -75,6 +76,40 @@ m2 = subj.mp2rage[1].dataobj[roi].flatten()
 ax4.scatter(m1, m2, np.zeros(m1.shape), c='g')
 
 # Save
-subj.t1_map.to_filename(os.path.join(t1_mapping.definitions.T1_MAPS_LIKELIHOOD, subj.subject_id, 't1_map.nii'))
+# subj.t1_map.to_filename(os.path.join(t1_mapping.definitions.T1_MAPS_LIKELIHOOD, subj.subject_id, 't1_map.nii'))
+
+# Create LUT
+pairs = subj.pairs
+t1 = subj.t1
+inv = [i.get_fdata(dtype=np.complex64) for i in subj.inv]
+max_L_gauss_ind = np.argmax(L_gauss, axis=-1)
+t1_lut = t1[max_L_gauss_ind]
+T = 0.5
+t1_lut[alpha < T] = 0
+
+# Create grid
+interp = RegularGridInterpolator((m, m), values=t1_lut,
+    bounds_error=False, fill_value=0, method='linear')
+
+# Calculate MP2RAGE images to get values at
+t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
+
+# Interpolate along new values
+pts = tuple([t.flatten() for t in t1w])
+t1_calc = interp(pts).reshape(t1w[0].shape)
+t1_calc = nib.nifti1.Nifti1Image(t1_calc, subj.affine)
+fig, ax = plot_nifti(t1_calc, slice=(107, 270, 260), mask=roi_mask_data, title='CSF ROI')
+
+# Create alpha LUT
+uncertainty = alpha*0.005 + (1-alpha)*100/12
+interp = RegularGridInterpolator((m, m), values=uncertainty,
+    bounds_error=False, fill_value=0, method='linear')
+
+# Interpolate along new values
+pts = tuple([t.flatten() for t in t1w])
+alpha_calc = interp(pts).reshape(t1w[0].shape)
+alpha_calc = nib.nifti1.Nifti1Image(alpha_calc, subj.affine)
+fig, ax = plot_nifti(alpha_calc, slice=(107, 270, 260), title='Alpha values', cmap='viridis', vmin=0.8, vmax=1)
+
 
 plt.show()

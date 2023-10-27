@@ -8,26 +8,7 @@ from math import floor
 from tqdm import tqdm
 import itertools
 from multiprocessing import Pool
-
-# Load subject
-subj = t1_mapping.mp2rage.MP2RAGESubject(
-    subject_id='334264',
-    scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-    scan_times=['1010', '3310', '5610'],
-    all_inv_combos=False
-)
-
-# Calculate what values would be produced using these parameters
-GRE = t1_mapping.utils.gre_signal(T1=subj.t1, **subj.eqn_params)
-
-# Now simulate with noise
-shape = tuple([m.shape[0] for m in subj.m])
-shape = shape + (subj.t1.shape[0],)
-n_inv = len(subj.scan_times)
-
-# Create normal distribution
-sd = 0.005
-print(subj.pairs)
+import argparse
 
 # Define a function to accumulate sums into the shared counts matrix for a batch of trials
 def accumulate_sums(iteration_range):
@@ -45,8 +26,38 @@ def accumulate_sums(iteration_range):
     return counts
 
 if __name__ == '__main__':
-    num_trials = 100_000_000
-    num_processes = 19
+    parser = argparse.ArgumentParser(description="Run Monte Carlo simulation to get MP2RAGE distribution")
+
+    parser.add_argument("--output_path", type=str, help="Path to the output file")
+    parser.add_argument("--num_trials", type=int, help="Number of trials")
+    parser.add_argument("--num_process", type=int, help="Number of CPUs to use")
+    parser.add_argument("--noise_std", type=float, default=0.005, help="Noise standard deviation")
+    parser.add_argument("--all_inv_combos", action="store_true", help="Include all inversion combinations instead of just pairwise")
+
+    args = parser.parse_args()
+
+    # Load subject
+    subj = t1_mapping.mp2rage.MP2RAGESubject(
+        subject_id='334264',
+        scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
+        scan_times=['1010', '3310', '5610'],
+        all_inv_combos=args.all_inv_combos
+    )
+
+    # Calculate what values would be produced using these parameters
+    GRE = t1_mapping.utils.gre_signal(T1=subj.t1, **subj.eqn_params)
+
+    # Now simulate with noise
+    shape = tuple([m.shape[0] for m in subj.m])
+    shape = shape + (subj.t1.shape[0],)
+    n_inv = len(subj.scan_times)
+
+    # Create normal distribution
+    sd = args.noise_std
+    print(subj.pairs)
+
+    num_trials = args.num_trials
+    num_processes = args.num_process
     iter_per_process = num_trials // num_processes
     
     print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes')
@@ -57,5 +68,5 @@ if __name__ == '__main__':
             counts += x
     
     # Save PDFs to file for later use
-    with open(os.path.join(t1_mapping.definitions.SIMULATION_DATA, f'counts_{int(num_trials // 1e6)}M.npy'), 'wb') as f:
+    with open(args.output_path, 'wb') as f:
         np.save(f, counts)

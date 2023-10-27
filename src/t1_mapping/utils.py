@@ -230,7 +230,7 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
     t1 : arraylike
         Potential T1 values (e.g. an array from 0.05 to 5)
     m : arraylike:
-        Potential MP2RAGE values calculated from t1
+        Potential MP2RAGE values
     inv : arraylike
         Array containing the gradient echo readouts
     TD : arraylike
@@ -303,6 +303,7 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
             raise TypeError("Argument monte_carlo must be provided if method for T1 map calculation is 'likelihood'.")
         else:
             counts = np.load(monte_carlo)
+            counts = np.flip(counts, axis=-1)
 
         n_pairs = len(pairs)
         n_readouts = len(inv)
