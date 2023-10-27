@@ -221,7 +221,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5):
+def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5, pairs=None):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
@@ -250,6 +250,8 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
         If method is 'likelihood', path to counts from Monte Carlo simulation
     likelihood_thresh : float, default=0.5
         If method is 'likelihood', the threshold for the acceptable relative likelihood
+    pairs : list of tuples
+        If method is 'likelihood', list of pairs used to calculate mp2rage images
 
     Returns
     --------
@@ -302,13 +304,11 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
         else:
             counts = np.load(monte_carlo)
 
-        n_pairs = len(m)
+        n_pairs = len(pairs)
         n_readouts = len(inv)
-        pairs = list(itertools.combinations(range(n_readouts), 2))
-        pairs = pairs[:-1] # Use (0,1), (0,2) but not (1,2) yet
 
         # Calculate likelihoods
-        L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=(0,1))
+        L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=tuple(range(n_pairs)))
         L_gauss = np.nan_to_num(L_gauss, nan=0)
 
         # Maximum likelihood of gaussian
@@ -326,7 +326,7 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
         # Create LUT
         max_L_gauss_ind = np.argmax(L_gauss, axis=-1)
         t1_lut = t1[max_L_gauss_ind]
-        t1_lut[alpha < likelihood_thresh] = 5
+        t1_lut[alpha < likelihood_thresh] = 0
 
         # Create grid
         interp = RegularGridInterpolator(tuple(m), values=t1_lut,

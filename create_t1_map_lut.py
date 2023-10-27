@@ -13,7 +13,7 @@ control_subj = groups['Health Control Scans'].dropna().astype(np.int64)
 ms_subj = groups['MS Patient Scans'].dropna().astype(np.int64)
 
 # Loop through subjects
-for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
+for subject in tqdm(['334264']): #os.listdir(t1_mapping.definitions.DATA)):
     subj_id = int(subject)
     if subj_id in ms_subj.to_numpy():
         group = 'ms'
@@ -53,6 +53,6 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
 
     # Calculate T1 map and save
     save_folder = os.path.join(t1_mapping.definitions.T1_MAPS_LUT, str(subj_id))
-    os.mkdir(save_folder)
-    subj.t1_map.to_filename(os.path.join(save_folder, 't1_map.nii'))
-
+    # os.mkdir(save_folder)
+    # subj.t1_map.to_filename(os.path.join(save_folder, 't1_map.nii'))
+    subj.t1_map.to_filename('test_eff96.nii')

@@ -13,35 +13,21 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 )
 
 # Load NumPy array for counts
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M.npy'))
-
-# Range of values for T1
-delta_t1 = 0.05
-t1_estimate = np.arange(0.05, 5.01, 0.05)
-num_points = len(t1_estimate)
-
-# Calculate what values would be produced using these parameters
-GRE = t1_mapping.utils.gre_signal(T1=t1_estimate, **subj.eqn_params)
-
-# Calculate what MP2RAGE image would have been
-mp2rage1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
-mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
-
-delta_m = (0.5-(-0.5))/mp2rage1.shape[0]
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M.npy'))
 
 # Calculate likelihoods
-L_gauss = counts / np.sum(counts * delta_m**2, axis=(0,1))
+L_gauss = counts / np.sum(counts *subj.delta_m**2, axis=(0,1))
 L_gauss = np.nan_to_num(L_gauss, nan=0)
 
-uni_value = 1/(len(mp2rage1)*len(mp2rage2)*delta_m**2)
-L_uni = np.full((len(mp2rage1), len(mp2rage2)), uni_value)
+uni_value = 1/(len(subj.m[0])*len(subj.m[1])*subj.delta_m**2)
+L_uni = np.full((len(subj.m[0]), len(subj.m[1])), uni_value)
 
 # Plot likelihood from Gaussian
 fig = plt.figure()
 ax1 = fig.add_subplot(1, 3, 1, projection='3d')
 ax2 = fig.add_subplot(1, 3, 2, projection='3d')
 ax3 = fig.add_subplot(1, 3, 3, projection='3d')
-X,Y = np.meshgrid(mp2rage1, mp2rage2)
+X,Y = np.meshgrid(subj.m[0], subj.m[1])
 
 ax2.plot_surface(X, Y, L_uni)
 ax2.set_xlabel('MP2RAGE_1')
@@ -64,7 +50,7 @@ def update(frame):
     ax1.set_xlabel('MP2RAGE_1')
     ax1.set_ylabel('MP2RAGE_2')
     ax1.set_zlabel(fr'$\mathcal{{L}}$')
-    ax1.set_title(fr'$\mathcal{{L}}(T_1 = {t1_estimate[frame]:.2f})$ from Gaussian')
+    ax1.set_title(fr'$\mathcal{{L}}(T_1 = {subj.t1[frame]:.2f})$ from Gaussian')
     ax1.set_zlim([0, 100])
 
 # Create animation
