@@ -13,14 +13,13 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 )
 
 # Load NumPy array for counts
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M.npy'))
-counts = np.flip(counts, axis=-1)
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M_test.npy'))
 
 # Calculate likelihoods
-L_gauss = counts / np.sum(counts *subj.delta_m**2, axis=(0,1))
+L_gauss = counts / np.sum(counts * np.prod(subj.delta_m), axis=(0,1))
 L_gauss = np.nan_to_num(L_gauss, nan=0)
 
-uni_value = 1/(len(subj.m[0])*len(subj.m[1])*subj.delta_m**2)
+uni_value = 1/(len(subj.m[0])*len(subj.m[1])*np.prod(subj.delta_m))
 L_uni = np.full((len(subj.m[0]), len(subj.m[1])), uni_value)
 
 # Plot likelihood from Gaussian

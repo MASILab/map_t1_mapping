@@ -9,9 +9,10 @@ from tqdm import tqdm
 import itertools
 from multiprocessing import Pool
 import argparse
+from functools import partial
 
 # Define a function to accumulate sums into the shared counts matrix for a batch of trials
-def accumulate_sums(iteration_range):
+def accumulate_sums(iteration_range, m_ranges):
     counts = np.zeros(shape)
     
     for trial in range(*iteration_range):
@@ -20,10 +21,11 @@ def accumulate_sums(iteration_range):
         mp2rage_noisy = [mp2rage_t1w(GRE_noisy[i[0], :], GRE_noisy[i[1], :]) for i in subj.pairs]
 
         for c in zip(*mp2rage_noisy, subj.t1):
-            coord = tuple([round((i + 0.5) / subj.delta_m) - 1 for i in c[:-1]]) + (round(c[-1] / subj.delta_t1) - 1,)
-            counts[coord] += 1
+            coord = tuple([round((i - m_ranges[idx][0]) / subj.delta_m[idx]) for idx, i in enumerate(c[:-1])]) + (round(c[-1] / subj.delta_t1) - 1,)
+            coord_clip = tuple(max(0, value) for value in coord)
+            counts[coord_clip] += 1
 
-    return counts
+    return counts 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run Monte Carlo simulation to get MP2RAGE distribution")
@@ -59,12 +61,14 @@ if __name__ == '__main__':
     num_trials = args.num_trials
     num_processes = args.num_process
     iter_per_process = num_trials // num_processes
+
+    iterable_func = partial(accumulate_sums, m_ranges=subj.m_ranges)
     
     print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes')
     ranges = [(i, i + iter_per_process) for i in range(0, num_trials, iter_per_process)]
     counts = np.zeros(shape)
     with Pool(processes=num_processes) as p:
-        for x in tqdm(p.imap(accumulate_sums, ranges), total=num_processes):
+        for x in tqdm(p.imap(iterable_func, ranges), total=num_processes):
             counts += x
     
     # Save PDFs to file for later use

@@ -221,7 +221,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5, pairs=None):
+def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5, pairs=None):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
@@ -229,8 +229,10 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
     ---------
     t1 : arraylike
         Potential T1 values (e.g. an array from 0.05 to 5)
-    m : arraylike:
+    m : arraylike
         Potential MP2RAGE values
+    m_ranges : array of tuples
+        Ranges of m
     inv : arraylike
         Array containing the gradient echo readouts
     TD : arraylike
@@ -303,22 +305,22 @@ def mp2rage_t1_map(t1, delta_t1, m, delta_m, inv, TD, TR, flip_angles, n, eff, m
             raise TypeError("Argument monte_carlo must be provided if method for T1 map calculation is 'likelihood'.")
         else:
             counts = np.load(monte_carlo)
-            counts = np.flip(counts, axis=-1)
 
         n_pairs = len(pairs)
         n_readouts = len(inv)
 
         # Calculate likelihoods
-        L_gauss = counts / np.sum(counts * delta_m**n_pairs, axis=tuple(range(n_pairs)))
+        L_gauss = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
         L_gauss = np.nan_to_num(L_gauss, nan=0)
 
         # Maximum likelihood of gaussian
         max_L_gauss = np.max(L_gauss, axis=-1)
 
         # Uniform likelihood
+        total_vol = np.prod(m[1]-m[0] for m in m_ranges)
         m_squares = np.array([len(mp2rage) for mp2rage in m])
         total_squares = np.prod(m_squares)
-        uni_value = 1/(total_squares*delta_m**n_pairs)
+        uni_value = 1/(total_squares*np.prod(delta_m))
         L_uni = np.full(tuple(m_squares), uni_value)
 
         # Relative likelihood
