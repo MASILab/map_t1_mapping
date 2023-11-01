@@ -13,7 +13,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 )
 
 # Load NumPy array for counts
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M_test.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'))
 
 # Calculate likelihoods
 L_gauss = counts / np.sum(counts * np.prod(subj.delta_m), axis=(0,1))

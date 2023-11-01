@@ -121,12 +121,9 @@ class EquationParameters(TypedDict):
 
 def acq_to_eqn_params(acq_params):
     """
-    Returns the equation parameters (TA, TB, TC, ...) given the acquisition
-    parameters (inversion times, flip angles, ...)
-
-    Parameters
-    ---------
-    acq_params : MP2RAGEParameters
+    Returns the equatio# Pad LUT
+m[0] = -0.5
+m[-1] = 0.5EParameters
         TypedDict with acquisition parameters TR, MP2RAGE_TR, flip_angles, 
         inversion_times, n and eff
 
@@ -267,15 +264,24 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         # Range of values for T1
         num_points = len(t1)
 
-        # Pad LUT
-        m = m[0] # Only need first element
-        m[0] = 0.5
-        m[-1] = -0.5
+        GRE = gre_signal(
+            T1=t1,
+            TD=TD,
+            TR=TR,
+            flip_angles=flip_angles,
+            n=n,
+            eff=eff
+        )
+        m = mp2rage_t1w(GRE[0,:], GRE[1,:])
 
         # Sort arrays
         sorted_idx = np.argsort(m)
         m = m[sorted_idx]
         t1 = t1[sorted_idx]
+
+        # Pad LUT
+        m[0] = -0.5
+        m[-1] = 0.5
 
         # Calculate for desired values
         t1_calc = np.interp(t1w.flatten(), m, t1, right=0.)
@@ -337,6 +343,9 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
         # Calculate MP2RAGE images to get values at
         t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
+
+        # Clip to [-0.5, 0.5] to accounting for floating-point errors
+        t1w = [np.clip(t, -0.5, 0.5) for t in t1w]
 
         # Interpolate along new values
         pts = tuple([t.flatten() for t in t1w])
