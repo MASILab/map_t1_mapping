@@ -174,7 +174,36 @@ class MP2RAGESubject():
             mp2rage_data = t1_mapping.utils.mp2rage_t1w(self.inv[i].get_fdata(dtype=np.complex64), self.inv[j].get_fdata(dtype=np.complex64))
             mp2rage.append(nib.Nifti1Image(mp2rage_data, self.affine))
         return mp2rage
+    
+    @cached_property
+    def t1_ev(self):
+        t1_ev = t1_mapping.utils.mp2rage_t1_exp_val(
+                t1=self.t1,
+                delta_t1=self.delta_t1,
+                m=self.m,
+                m_ranges=self.m_ranges,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                monte_carlo=self.monte_carlo,
+                pairs=self.pairs,
+        )
+        return nib.Nifti1Image(t1_ev, self.affine)
 
+    @cached_property
+    def t1_var(self):
+        t1_var = t1_mapping.utils.mp2rage_t1_var(
+                t1=self.t1,
+                delta_t1=self.delta_t1,
+                m=self.m,
+                m_ranges=self.m_ranges,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                monte_carlo=self.monte_carlo,
+                pairs=self.pairs,
+        )
+        return nib.Nifti1Image(t1_var, self.affine)
     # @property
     # def m(self):
     #     m = [np.arange(r[0], r[1], self.delta_m[i]) for i, r in enumerate(self.m_ranges)]

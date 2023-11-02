@@ -41,28 +41,23 @@ X, Y, Z = np.meshgrid(mp2rage1, mp2rage2, t1_estimate)
 
 # Generate point cloud used to calculate density
 pts = vedo.Points(points, r=10)
-pts2 = vedo.Points(points2[::100], r=10)
 
 # Generate density
 vol = pts.density().c("jet").alpha([0, 1])
-vol2 = pts2.density().c("hot").alpha([0, 1])
 
 # Generate colorbar
-vol.add_scalarbar(title="Density", c="k", nlabels=2, pos=(0.7, 0.3), size=(None, 500))
-vol2.add_scalarbar(title="Density", c="k", nlabels=2, pos=(0.8, 0.3), size=(None, 500))
+vol.add_scalarbar(title="Density", c="k", nlabels=2, pos=(0.8, 0.3), size=(None, 500))
 
 # Specify maximum intensity projection
 vol.mode(1)
-vol2.mode(1)
 
 # Scale to have equal axes
 scale, values_and_labels, ranges = adam_utils.vedo.equal_axes(xlim=[-0.5,0.5], ylim=[-0.5,0.5], zlim=[0, 5])
 vol.scale(scale)
-vol2.scale(scale)
 
 # Customize axes and tick labels
 axes = vedo.Axes(
-    vol2,
+    vol,
     x_values_and_labels=values_and_labels['x'],
     y_values_and_labels=values_and_labels['y'],
     z_values_and_labels=values_and_labels['z'],
@@ -79,7 +74,6 @@ plt = vedo.Plotter(interactive=False)
 
 # Add volume to plotter
 plt += vol
-plt += vol2
 
 # Show current axes
 plt.show(axes=axes, viewup="z")

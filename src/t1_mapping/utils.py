@@ -355,3 +355,147 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         raise ValueError("Invalid value for 'method'. Valid values are 'linear', 'cubic' or 'likelihood'.")
 
     return t1_calc
+
+def mp2rage_t1_exp_val(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles, n, eff, monte_carlo=None, pairs=None):
+    """
+    Returns the expected value of T1 given M1, M2
+
+    Parameters
+    ---------
+    t1 : arraylike
+        Potential T1 values (e.g. an array from 0.05 to 5)
+    delta_t1 : float
+        T1 spacing
+    m : arraylike
+        Potential MP2RAGE values
+    m_ranges : array of tuples
+        Ranges of m
+    delta_m : float
+        m spacing
+    inv : arraylike
+        Array containing the gradient echo readouts
+    TD : arraylike
+        Array containing time between gradient echo readout blocks
+    TR : arraylike
+        Repitition time of the gradient echo readout in s
+    flip_angles : arraylike
+        Flip angles of gradient echo pulses in rad
+    n : arraylike
+        Number of pulses within each gradient echo readout. Contains 2
+        ints for number before and after center of k-space.
+    eff : arraylike
+        Inversion efficiency of scanner
+    monte_carlo : str
+        Path to counts from Monte Carlo simulation
+    pairs : list of tuples
+        List of pairs used to calculate mp2rage images
+
+    Returns
+    --------
+    t1_ev : numpy.ndarray
+        Expected value map calculated from inputs
+    """
+    # Load Monte Carlo simulation file
+    counts = np.load(monte_carlo)
+
+    n_pairs = len(pairs)
+    n_readouts = len(inv)
+
+    # Calculate posterior
+    posterior = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    posterior = np.nan_to_num(posterior, nan=0)
+
+    # Expected value (Need to reverse T1)
+    exp_val = np.sum(t1*posterior,axis=-1)/np.sum(posterior,axis=-1)
+    exp_val = np.nan_to_num(exp_val, nan=0)
+
+    # Create grid
+    interp = RegularGridInterpolator(tuple(m), values=exp_val,
+        bounds_error=False, fill_value=0, method='linear')
+
+    # Calculate MP2RAGE images to get values at
+    t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
+
+    # Clip to [-0.5, 0.5] to accounting for floating-point errors
+    t1w = [np.clip(t, -0.5, 0.5) for t in t1w]
+
+    # Interpolate along new values
+    pts = tuple([t.flatten() for t in t1w])
+    t1_ev = interp(pts).reshape(t1w[0].shape)
+
+    return t1_ev
+
+def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles, n, eff, monte_carlo=None, pairs=None):
+    """
+    Returns the variance of T1 given M1 and M2
+
+    Parameters
+    ---------
+    t1 : arraylike
+        Potential T1 values (e.g. an array from 0.05 to 5)
+    delta_t1 : float
+        T1 spacing
+    m : arraylike
+        Potential MP2RAGE values
+    m_ranges : array of tuples
+        Ranges of m
+    delta_m : float
+        m spacing
+    inv : arraylike
+        Array containing the gradient echo readouts
+    TD : arraylike
+        Array containing time between gradient echo readout blocks
+    TR : arraylike
+        Repitition time of the gradient echo readout in s
+    flip_angles : arraylike
+        Flip angles of gradient echo pulses in rad
+    n : arraylike
+        Number of pulses within each gradient echo readout. Contains 2
+        ints for number before and after center of k-space.
+    eff : arraylike
+        Inversion efficiency of scanner
+    monte_carlo : str
+        Path to counts from Monte Carlo simulation
+    pairs : list of tuples
+        List of pairs used to calculate mp2rage images
+
+    Returns
+    --------
+    t1_var : numpy.ndarray
+        Variance map calculated from inputs
+    """
+    # Load Monte Carlo simulation file
+    counts = np.load(monte_carlo)
+
+    n_pairs = len(pairs)
+    n_readouts = len(inv)
+
+    # Calculate posterior
+    posterior = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    posterior = np.nan_to_num(posterior, nan=0)
+
+    # Expected value (Need to reverse T1)
+    # exp_val = np.sum(t1[::-1,np.newaxis,np.newaxis]*posterior, axis=-1)/np.sum(posterior, axis=2)
+    exp_val = np.sum(t1*posterior,axis=-1)/np.sum(posterior,axis=-1)
+    exp_val = np.nan_to_num(exp_val, nan=0)
+
+    # Variance (Need to reverse T1)
+    var = np.sum((t1 - exp_val)**2*posterior, axis=-1)/np.sum(posterior, axis=-1)
+    # var = np.sum(t1**2*posterior,axis=-1)/np.sum(posterior,axis=-1) - exp_val**2
+    var = np.nan_to_num(var, nan=0)
+
+    # Create grid
+    interp = RegularGridInterpolator(tuple(m), values=var,
+        bounds_error=False, fill_value=0, method='linear')
+
+    # Calculate MP2RAGE images to get values at
+    t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
+
+    # Clip to [-0.5, 0.5] to accounting for floating-point errors
+    t1w = [np.clip(t, -0.5, 0.5) for t in t1w]
+
+    # Interpolate along new values
+    pts = tuple([t.flatten() for t in t1w])
+    t1_var = interp(pts).reshape(t1w[0].shape)
+
+    return t1_var
