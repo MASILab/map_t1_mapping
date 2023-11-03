@@ -30,7 +30,7 @@ GRE = t1_mapping.utils.gre_signal(
 m = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 
 # Plot
-fig = plt.figure()
+fig = plt.figure(figsize=(10, 6))
 ax1 = fig.add_subplot(1,2,1)
 ax1.plot(m, subj.t1)
 ax1.set_xlabel('$S_{1,2}$')
@@ -54,7 +54,9 @@ ax2.plot(m2, subj.t1, zs=0.5, zdir='y', color=[1,0,0,0.2])
 t1w1 = subj.mp2rage[0].get_fdata()
 t1w2 = subj.mp2rage[1].get_fdata()
 indx = np.arange(0, len(t1w1.flatten()), 50000)
-ax2.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zdir='z', color=[0,1,0,0.2], label='Unknown values')
+ax2.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zdir='z', color=[0,1,0,0.2], label='Sample unknown values')
 ax2.legend()
 ax2.set_title('Multiple MP2RAGE Signals')
+
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_1.tiff', dpi=600)
 plt.show()

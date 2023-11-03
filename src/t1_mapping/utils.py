@@ -401,12 +401,16 @@ def mp2rage_t1_exp_val(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_ang
     n_pairs = len(pairs)
     n_readouts = len(inv)
 
+    # Calculate likelihood
+    likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    likelihood = np.nan_to_num(likelihood, nan=0)
+
     # Calculate posterior
-    posterior = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[:,:,np.newaxis]
     posterior = np.nan_to_num(posterior, nan=0)
 
-    # Expected value (Need to reverse T1)
-    exp_val = np.sum(t1*posterior,axis=-1)/np.sum(posterior,axis=-1)
+    # Expected value
+    exp_val = np.sum(t1*posterior*delta_t1,axis=-1)
     exp_val = np.nan_to_num(exp_val, nan=0)
 
     # Create grid
@@ -470,22 +474,23 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     n_pairs = len(pairs)
     n_readouts = len(inv)
 
+    # Calculate likelihood
+    likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    likelihood = np.nan_to_num(likelihood, nan=0)
+
     # Calculate posterior
-    posterior = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[:,:,np.newaxis]
     posterior = np.nan_to_num(posterior, nan=0)
 
-    # Expected value (Need to reverse T1)
-    # exp_val = np.sum(t1[::-1,np.newaxis,np.newaxis]*posterior, axis=-1)/np.sum(posterior, axis=2)
-    exp_val = np.sum(t1*posterior,axis=-1)/np.sum(posterior,axis=-1)
+    # Expected value
+    exp_val = np.sum(t1*posterior*delta_t1,axis=-1)
     exp_val = np.nan_to_num(exp_val, nan=0)
 
-    # Variance (Need to reverse T1)
-    var = np.sum((t1 - exp_val)**2*posterior, axis=-1)/np.sum(posterior, axis=-1)
-    # var = np.sum(t1**2*posterior,axis=-1)/np.sum(posterior,axis=-1) - exp_val**2
-    var = np.nan_to_num(var, nan=0)
+    # Variance
+    variance = np.sum((t1 - exp_val[:,:,np.newaxis])**2*posterior*delta_t1, axis=-1)
 
     # Create grid
-    interp = RegularGridInterpolator(tuple(m), values=var,
+    interp = RegularGridInterpolator(tuple(m), values=variance,
         bounds_error=False, fill_value=0, method='linear')
 
     # Calculate MP2RAGE images to get values at

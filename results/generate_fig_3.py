@@ -39,12 +39,12 @@ nbins = 50
 fig, ax = plt.subplots()
 counts, xbins, ybins, hist = ax.hist2d(average, difference, bins=[nbins, nbins], norm='log', cmap='viridis') #norm='log'
 ax.set_xlabel('Mean')
-ax.set_ylabel('Difference')
+ax.set_ylabel('Difference (MAP $T_1$ Map - Original MP2RAGE $T_1$ Map)')
 
 # Add colorbar
 cbar = fig.colorbar(hist, ax=ax)
 cbar.set_label('Count (log scale)')
 ax.set_title('Bland-Altman Density Plot')
 
-
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_3.tiff', dpi=600)
 plt.show()
