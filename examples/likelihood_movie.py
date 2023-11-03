@@ -13,13 +13,13 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 )
 
 # Load NumPy array for counts
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'))
 
 # Calculate likelihoods
-L_gauss = counts / np.sum(counts *subj.delta_m**2, axis=(0,1))
+L_gauss = counts / np.sum(counts * np.prod(subj.delta_m), axis=(0,1))
 L_gauss = np.nan_to_num(L_gauss, nan=0)
 
-uni_value = 1/(len(subj.m[0])*len(subj.m[1])*subj.delta_m**2)
+uni_value = 1/(len(subj.m[0])*len(subj.m[1])*np.prod(subj.delta_m))
 L_uni = np.full((len(subj.m[0]), len(subj.m[1])), uni_value)
 
 # Plot likelihood from Gaussian
@@ -27,6 +27,9 @@ fig = plt.figure()
 ax1 = fig.add_subplot(1, 3, 1, projection='3d')
 ax2 = fig.add_subplot(1, 3, 2, projection='3d')
 ax3 = fig.add_subplot(1, 3, 3, projection='3d')
+ax1.view_init(27, -116, 0)
+ax2.view_init(27, -116, 0)
+ax3.view_init(27, -116, 0)
 X,Y = np.meshgrid(subj.m[0], subj.m[1])
 
 ax2.plot_surface(X, Y, L_uni)
@@ -64,6 +67,7 @@ ani = FuncAnimation(fig, update, frames=num_frames, blit=False)
 alpha = max_L_gauss / (max_L_gauss + L_uni)
 fig3 = plt.figure()
 ax4 = fig3.add_subplot(projection='3d')
+ax4.view_init(27, -116, 0)
 ax4.plot_surface(X, Y, alpha)
 ax4.set_xlabel('MP2RAGE_1')
 ax4.set_ylabel('MP2RAGE_2')
