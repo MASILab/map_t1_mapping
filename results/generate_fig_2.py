@@ -62,5 +62,5 @@ cbar = fig.colorbar(im, ax=axes[1,1], cax=cax, location='left')
 cbar.ax.set_xlabel('s')
 
 plt.tight_layout()
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_2.tiff', dpi=600)
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_2.png', dpi=600)
 plt.show()

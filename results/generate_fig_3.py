@@ -46,5 +46,5 @@ cbar = fig.colorbar(hist, ax=ax)
 cbar.set_label('Count (log scale)')
 ax.set_title('Bland-Altman Density Plot')
 
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_3.tiff', dpi=600)
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_3.png', dpi=600)
 plt.show()

@@ -28,5 +28,5 @@ t1_diff = nib.Nifti1Image(t1_like.dataobj - t1_lut.dataobj, subj_like.affine)
 fig, axes = plot_nifti(t1_diff, cmap='RdBu', vmin=-3, vmax=3, slice_labels=False, cbar_label='s', title='Difference\nMAP $T_1$ Map - Original MP2RAGE $T_1$ Map')
 
 plt.tight_layout()
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_4.tiff', dpi=600)
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_4.png', dpi=600)
 plt.show()
