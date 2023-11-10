@@ -1,8 +1,8 @@
 # Register the ground truth T1 maps to the generated T1 maps
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-outputDir="$dataDir/t1_maps_truth_affine"
-movingDir="$dataDir/mp2rage_sir_qmt"
-fixedDir="$dataDir/t1_maps_lut"
+outputDir="$dataDir/t1_maps_lut_rigid"
+movingDir="$dataDir/t1_maps_lut"
+fixedDir="$dataDir/mp2rage_sir_qmt"
 
 for subj_path in "$movingDir"/*/; do 
     subj_id=`basename $subj_path`
@@ -18,9 +18,9 @@ for subj_path in "$movingDir"/*/; do
         --interpolation Linear \
         --use-histogram-matching 0 \
         --winsorize-image-intensities [ 0.005,0.995 ] \
-        --initial-moving-transform [ $fixedDir/$subj_id/t1_map.nii,$movingDir/$subj_id/filtered_t1_map.nii,0] \
-        --transform Affine[ 0.1 ] \
-        --metric MI[ $fixedDir/$subj_id/t1_map.nii,$movingDir/$subj_id/filtered_t1_map.nii,1,32,Regular,0.25 ]\
+        --initial-moving-transform [ $fixedDir/$subj_id/filtered_t1_map.nii,$movingDir/$subj_id/t1_map.nii, 0] \
+        --transform Rigid[ 0.1 ] \
+        --metric MI[ $fixedDir/$subj_id/filtered_t1_map.nii,$movingDir/$subj_id/t1_map.nii,1,32,Regular,0.25 ]\
         --convergence [ 1000x500x250x100,1e-6,10 ] \
         --shrink-factors 12x8x4x2 \
         --smoothing-sigmas 4x3x2x1vox

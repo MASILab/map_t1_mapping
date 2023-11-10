@@ -406,7 +406,7 @@ def mp2rage_t1_exp_val(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_ang
     likelihood = np.nan_to_num(likelihood, nan=0)
 
     # Calculate posterior
-    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[:,:,np.newaxis]
+    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
     posterior = np.nan_to_num(posterior, nan=0)
 
     # Expected value
@@ -479,7 +479,7 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     likelihood = np.nan_to_num(likelihood, nan=0)
 
     # Calculate posterior
-    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[:,:,np.newaxis]
+    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
     posterior = np.nan_to_num(posterior, nan=0)
 
     # Expected value
@@ -487,7 +487,7 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     exp_val = np.nan_to_num(exp_val, nan=0)
 
     # Variance
-    variance = np.sum((t1 - exp_val[:,:,np.newaxis])**2*posterior*delta_t1, axis=-1)
+    variance = np.sum((t1 - exp_val[...,np.newaxis])**2*posterior*delta_t1, axis=-1)
 
     # Create grid
     interp = RegularGridInterpolator(tuple(m), values=variance,

@@ -19,8 +19,8 @@ subj_like = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
-    all_inv_combos=False,
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing_full.npy'), 
+    all_inv_combos=True,
 )
 t1_like = subj_like.t1_map
 t1_like_slice = load_slice(t1_like, view=2)
@@ -62,5 +62,6 @@ cbar = fig.colorbar(im, ax=axes[1,1], cax=cax, location='left')
 cbar.ax.set_xlabel('s')
 
 plt.tight_layout()
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_2.png', dpi=600)
+# fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_2.png', dpi=600)
+
 plt.show()
