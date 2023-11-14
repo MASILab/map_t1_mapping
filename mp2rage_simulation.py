@@ -42,7 +42,7 @@ if __name__ == '__main__':
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id='334264',
         scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-        scan_times=['1010', '3310', '5610'],
+        scan_times=['1010', '5610'], #5610
         all_inv_combos=args.all_inv_combos
     )
 
