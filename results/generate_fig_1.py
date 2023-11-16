@@ -58,5 +58,5 @@ ax2.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zdir='z', color=[0,1,0,0
 ax2.legend()
 ax2.set_title('Multiple MP2RAGE Signals')
 
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_1.png', dpi=600)
+# fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_1.png', dpi=600)
 plt.show()

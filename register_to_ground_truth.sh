@@ -1,7 +1,7 @@
 # Register the ground truth T1 maps to the generated T1 maps
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-outputDir="$dataDir/t1_maps_lut_rigid"
-movingDir="$dataDir/t1_maps_lut"
+outputDir="$dataDir/t1_maps_likelihood_s1_3_rigid"
+movingDir="$dataDir/t1_maps_likelihood_s1_3"
 fixedDir="$dataDir/mp2rage_sir_qmt"
 
 for subj_path in "$movingDir"/*/; do 
@@ -14,7 +14,7 @@ for subj_path in "$movingDir"/*/; do
     # Perform registration
     antsRegistration --verbose 0 --dimensionality 3 --float 0 \
         --collapse-output-transforms 1 \
-        --output [ $outputDir/$subj_id/,$outputDir/$subj_id/Warped.nii.gz,$outputDir/$subj_id/InverseWarped.nii.gz ] \
+        --output [ $outputDir/$subj_id/,$outputDir/$subj_id/reg_t1_map.nii.gz,$outputDir/$subj_id/InverseWarped.nii.gz ] \
         --interpolation Linear \
         --use-histogram-matching 0 \
         --winsorize-image-intensities [ 0.005,0.995 ] \
