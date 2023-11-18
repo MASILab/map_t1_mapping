@@ -50,6 +50,9 @@ subjects = []
 for subject_id in subject_ids:
     if subject_id not in ground_truth_df['Subject'].values:
         continue
+    elif subject_id == '334408':
+        print(f'Skipping {subject_id}')
+        continue
     rmse, rmse_s1_2, rmse_s1_3 = calculate_rmse(subject_id)
     rmse_list.append(rmse)
     rmse_s1_2_list.append(rmse_s1_2)
