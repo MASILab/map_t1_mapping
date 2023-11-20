@@ -139,32 +139,45 @@ class MP2RAGESubject():
         t1w_array = t1_mapping.utils.mp2rage_t1w(self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64))
         return nib.nifti1.Nifti1Image(t1w_array, self.affine)
     
-    @cached_property
-    def t1_map(self):
-        # if len(self.inv) == 2:
-        #     t1_map = t1_mapping.utils.mp2rage_t1_map(
-        #         t1=self.t1, 
-        #         delta_t1=self.delta_t1,
-        #         m=self.m,
-        #         m_ranges=self.m_ranges,
-        #         delta_m=self.delta_m,
-        #         inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
-        #         **self.eqn_params,
-        #         method='linear')
-        # else:
-        t1_map = t1_mapping.utils.mp2rage_t1_map(
-            t1=self.t1,
-            delta_t1=self.delta_t1,
-            m=self.m,
-            m_ranges=self.m_ranges,
-            delta_m=self.delta_m,
-            inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
-            **self.eqn_params,
-            method='likelihood',
-            monte_carlo=self.monte_carlo,
-            pairs=self.pairs,
-            likelihood_thresh=0.5
-        )
+    def t1_map(self, method):
+        if method == 'linear':
+            t1_map = t1_mapping.utils.mp2rage_t1_map(
+                t1=self.t1, 
+                delta_t1=self.delta_t1,
+                m=self.m,
+                m_ranges=self.m_ranges,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                method='linear')
+        elif method == 'likelihood':
+            t1_map = t1_mapping.utils.mp2rage_t1_map(
+                t1=self.t1,
+                delta_t1=self.delta_t1,
+                m=self.m,
+                m_ranges=self.m_ranges,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                method='likelihood',
+                monte_carlo=self.monte_carlo,
+                pairs=self.pairs,
+                likelihood_thresh=0.5
+            )
+        elif method == 'map':
+            t1_map = t1_mapping.utils.mp2rage_t1_map(
+                t1=self.t1,
+                delta_t1=self.delta_t1,
+                m=self.m,
+                m_ranges=self.m_ranges,
+                delta_m=self.delta_m,
+                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+                **self.eqn_params,
+                method='map',
+                monte_carlo=self.monte_carlo,
+                pairs=self.pairs,
+                likelihood_thresh=0.5
+            )
         return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
     @cached_property

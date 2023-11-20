@@ -20,7 +20,6 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'), 
     all_inv_combos=False,
 )
-print(subj.m)
 
 
 # Loop through subjects
@@ -31,7 +30,9 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     elif subj_id in control_subj.to_numpy():
         group = 'control'
     else:
+        print(f'Skipping {subject_id}')
         group = 'n/a'
+        continue
 
     # Get list of scans
     scan = os.listdir(os.path.join(t1_mapping.definitions.DATA, subject))
@@ -54,18 +55,18 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     # Get unique items and sort
     times = list(set(times))
     times = sorted(t for t in times)
+    times = times[0:2]
 
     # Create MP2RAGE subject
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id=subject,
         scan=chosen_scan,
         scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
-        all_inv_combos=False,
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.T1_MAPS_LUT, str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
-    subj.t1_map.to_filename(os.path.join(save_folder, 't1_map.nii'))
+    t1_map = subj.t1_map('linear')
+    t1_map.to_filename(os.path.join(save_folder, 't1_map.nii'))
