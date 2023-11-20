@@ -141,30 +141,30 @@ class MP2RAGESubject():
     
     @cached_property
     def t1_map(self):
-        if len(self.inv) == 2:
-            t1_map = t1_mapping.utils.mp2rage_t1_map(
-                t1=self.t1, 
-                delta_t1=self.delta_t1,
-                m=self.m,
-                m_ranges=self.m_ranges,
-                delta_m=self.delta_m,
-                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
-                **self.eqn_params,
-                method='linear')
-        else:
-            t1_map = t1_mapping.utils.mp2rage_t1_map(
-                t1=self.t1,
-                delta_t1=self.delta_t1,
-                m=self.m,
-                m_ranges=self.m_ranges,
-                delta_m=self.delta_m,
-                inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
-                **self.eqn_params,
-                method='likelihood',
-                monte_carlo=self.monte_carlo,
-                pairs=self.pairs,
-                likelihood_thresh=0.5
-            )
+        # if len(self.inv) == 2:
+        #     t1_map = t1_mapping.utils.mp2rage_t1_map(
+        #         t1=self.t1, 
+        #         delta_t1=self.delta_t1,
+        #         m=self.m,
+        #         m_ranges=self.m_ranges,
+        #         delta_m=self.delta_m,
+        #         inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+        #         **self.eqn_params,
+        #         method='linear')
+        # else:
+        t1_map = t1_mapping.utils.mp2rage_t1_map(
+            t1=self.t1,
+            delta_t1=self.delta_t1,
+            m=self.m,
+            m_ranges=self.m_ranges,
+            delta_m=self.delta_m,
+            inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
+            **self.eqn_params,
+            method='likelihood',
+            monte_carlo=self.monte_carlo,
+            pairs=self.pairs,
+            likelihood_thresh=0.5
+        )
         return nib.nifti1.Nifti1Image(t1_map, self.affine)
 
     @cached_property
@@ -204,6 +204,13 @@ class MP2RAGESubject():
                 pairs=self.pairs,
         )
         return nib.Nifti1Image(t1_var, self.affine)
+    
+    @property
+    def t1_std(self):
+        t1_var_data = self.t1_var.get_fdata()
+        t1_std_data = np.sqrt(t1_var_data)
+        return nib.Nifti1Image(t1_std_data, self.affine)
+    
     # @property
     # def m(self):
     #     m = [np.arange(r[0], r[1], self.delta_m[i]) for i, r in enumerate(self.m_ranges)]

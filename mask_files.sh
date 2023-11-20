@@ -1,7 +1,7 @@
 # Register the ground truth T1 maps to the generated T1 maps
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-inputDir="$dataDir/t1_maps_likelihood_reg"
-outputDir="$dataDir/t1_maps_likelihood_mask"
+inputDir="$dataDir/t1_maps_truth_inf_to_zero"
+outputDir="$dataDir/t1_maps_truth_mask"
 maskDir="$dataDir/ground_truth_masks"
 
 #for subj_path in "$inputDir"/*/; do

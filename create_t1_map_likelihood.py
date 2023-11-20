@@ -43,19 +43,19 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     # Get unique items and sort
     times = list(set(times))
     times = sorted(t for t in times)
-    times = [times[0], times[2]]
+    times = [times[0], times[1]]
 
     # Create MP2RAGE subject
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id=subject,
         scan=chosen_scan,
         scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
+        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'), 
         all_inv_combos=False,
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'std_maps_s1_2', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
-    subj.t1_map.to_filename(os.path.join(save_folder, 't1_map.nii'))
+    subj.t1_std.to_filename(os.path.join(save_folder, 'std_map.nii'))
