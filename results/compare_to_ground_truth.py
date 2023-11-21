@@ -11,10 +11,10 @@ from statannotations.Annotator import Annotator
 
 def calculate_rmse(subject_id):
     # Load subject
-    likelihood = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_mask', subject_id, 't1_map.nii.gz'))
+    likelihood = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_all_mask', subject_id, 't1_map.nii.gz'))
     likelihood_s1_2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject_id, 't1_map.nii.gz'))
     likelihood_s1_3 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_3_mask', subject_id, 't1_map.nii.gz'))
-    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut_mask', subject_id, 't1_map.nii.gz'))
+    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'old', 't1_maps_lut_mask', subject_id, 't1_map.nii.gz'))
     truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_mask', subject_id, 't1_map.nii.gz'))
 
     # Get data
@@ -52,7 +52,7 @@ rmse_s1_3_list = []
 rmse_lut_list = []
 subjects = []
 for subject_id in subject_ids:
-    if subject_id not in ground_truth_df['Subject'].values:
+    if subject_id not in ground_truth_df['Subject'].values or subject_id in ['336547', '336530', '336699', '336388']:
         print(f'Skipping {subject_id}')
         continue
     rmse, rmse_s1_2, rmse_s1_3, rmse_lut = calculate_rmse(subject_id)

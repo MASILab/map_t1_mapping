@@ -61,13 +61,10 @@ n_pairs = 1
 counts = np.load(subj.monte_carlo)
 likelihood = counts / np.sum(counts * np.prod(subj.delta_m), axis=tuple(range(n_pairs)))
 likelihood = np.nan_to_num(likelihood, nan=0)
-print(np.sum(likelihood[:,50])*subj.delta_m[0])
-posterior = likelihood / np.sum(subj.delta_t1*likelihood, axis=-1)[..., np.newaxis]
-posterior = np.nan_to_num(posterior, nan=0)
-print(np.sum(posterior[50,:]*subj.delta_t1)) # Should integrate to 1
+posterior = likelihood / np.sum(likelihood * subj.delta_t1, axis=tuple(range(n_pairs)))
 
 # MAP estimate
-map_est = np.max(posterior, axis=0)
+map_est = np.max(posterior, axis=-1)
 
 # Plot 3D figure
 m = subj_data['S1_2'].values
@@ -75,9 +72,9 @@ fig = plt.figure(figsize=(4.2, 4))
 ax = fig.add_subplot(projection='3d')
 ax.plot(subj.t1, m, map_est, color='b')
 
-for s_slice in range(100):
-    s1_2 = np.full(subj.t1.shape, subj.m[0][s_slice])
-    ax.plot(subj.t1, s1_2, posterior[s_slice,:], color='b', alpha=0.25)
+for s_slice in range(1,100):
+    s1_2 = np.full(subj.t1.shape, m[100-s_slice])
+    ax.plot(subj.t1, s1_2, posterior[:, s_slice], color='b', alpha=0.25)
 
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')

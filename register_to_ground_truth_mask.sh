@@ -2,12 +2,13 @@
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
 regDir="$dataDir/t1_maps_likelihood_strip_rigid"
 maskDir="$dataDir/ground_truth_masks"
-inputDir="$dataDir/std_maps_s1_2"
+
+inputDir="$dataDir/t1_maps_likelihood_all"
 outputDir="${inputDir}_mask"
 
 tempDir="/nfs/masi/saundam1/temp"
 
-filename="std_map.nii"
+filename="t1_map.nii"
 #for subj_path in "$inputDir"/*/; do
 for subj_path in "$inputDir"/*/; do
     subj_id=`basename $subj_path`
