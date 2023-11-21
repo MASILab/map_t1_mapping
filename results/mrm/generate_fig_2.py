@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pandas as pd
 from adam_utils.nifti import load_slice
+from scipy.interpolate import RegularGridInterpolator, interpn
 
 # Seaborn and matplotlib defaults
 matplotlib.rcParams['grid.linewidth'] = 1
@@ -57,24 +58,32 @@ if save_fig:
     fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/fig2_part1.png', dpi=600)
 
 # Calculate posterior
-n_pairs = 1
+n_pairs = 2
 counts = np.load(subj.monte_carlo)
-likelihood = counts / np.sum(counts * np.prod(subj.delta_m), axis=tuple(range(n_pairs)))
-likelihood = np.nan_to_num(likelihood, nan=0)
-posterior = likelihood / np.sum(likelihood * subj.delta_t1, axis=tuple(range(n_pairs)))
+posterior = counts / np.sum(counts * subj.delta_t1, axis=(0,1))
 
 # MAP estimate
 map_est = np.max(posterior, axis=-1)
+
+# Interpolate MAP estimate along S1,2 (instead of M values)
+map_int = np.interp(subj_data['S1_2'].values, subj.m[0], map_est)
+
+# Interpolate posterior along S1,2 instead of M
+X,Y = np.meshgrid(subj_data['S1_2'].values, subj.t1)
+points = np.concatenate((X.ravel()[:,np.newaxis], Y.ravel()[:,np.newaxis]), axis=1)
+posterior_int = RegularGridInterpolator((subj.m[0], subj.t1), posterior, bounds_error=False, fill_value=0)(points)
+posterior_int = posterior_int.reshape(X.shape)
 
 # Plot 3D figure
 m = subj_data['S1_2'].values
 fig = plt.figure(figsize=(4.2, 4))
 ax = fig.add_subplot(projection='3d')
-ax.plot(subj.t1, m, map_est, color='b')
+ax.set_proj_type('ortho')
+ax.plot(subj.t1, m, map_int, color='b')
 
-for s_slice in range(1,100):
-    s1_2 = np.full(subj.t1.shape, m[100-s_slice])
-    ax.plot(subj.t1, s1_2, posterior[:, s_slice], color='b', alpha=0.25)
+for s_slice in [30, 40, 50, 60]:
+    s1_2 = np.full(subj.t1.shape, m[s_slice])
+    ax.plot(subj.t1, s1_2, posterior_int[s_slice], color='b')
 
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')

@@ -42,36 +42,7 @@ def calculate_rmse(subject_id):
 
 # Get a list of all folders under t1_mapping.definitions.GROUND_TRUTH_DATA
 subject_ids = os.listdir(t1_mapping.definitions.GROUND_TRUTH_DATA)
-
-# Run calculate_rmse() for each folder
-ground_truth_df = pd.read_csv('/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/ground_truth_subjects.csv', dtype={'Subject': str})
-
-rmse_list = []
-rmse_s1_2_list = []
-rmse_s1_3_list = []
-rmse_lut_list = []
-subjects = []
-for subject_id in subject_ids:
-    if subject_id not in ground_truth_df['Subject'].values or subject_id in ['336547', '336530', '336699', '336388']:
-        print(f'Skipping {subject_id}')
-        continue
-    rmse, rmse_s1_2, rmse_s1_3, rmse_lut = calculate_rmse(subject_id)
-    rmse_list.append(rmse)
-    rmse_s1_2_list.append(rmse_s1_2)
-    rmse_s1_3_list.append(rmse_s1_3)
-    rmse_lut_list.append(rmse_lut)
-    subjects.append(subject_id)
-
-rmse_array = np.array(rmse_list)
-rmse_s1_2_array = np.array(rmse_s1_2_list)
-rmse_s1_3_array = np.array(rmse_s1_3_list)
-rmse_lut_array = np.array(rmse_lut_list)
-
-print(f'RMSE: {np.mean(rmse_array):.4f} +/- {np.std(rmse_array):.4f}')
-print(f'RMSE S1_2: {np.mean(rmse_s1_2_array):.4f} +/- {np.std(rmse_s1_2_array):.4f}')
-print(f'RMSE S1_3: {np.mean(rmse_s1_3_array):.4f} +/- {np.std(rmse_s1_3_array):.4f}')
-print(f'RMSE LUT: {np.mean(rmse_lut_array):.4f} +/- {np.std(rmse_lut_array):.4f}')
-
+folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_converted_v2019', '336547', '1101-x-MP2RAGE_0p8mm_1sTI_autoshim-x-MP2RAGE_0p8mm_1sTI_autoshim')
 # Perform Wilcoxon signed-rank test
 zero_method = 'pratt'
 stat, p1 = wilcoxon(rmse_array, rmse_s1_2_array, zero_method=zero_method)
