@@ -1,4 +1,4 @@
-# Generate figure 2: idea
+# Generate figure 1: problem
 import os
 import t1_mapping
 import nibabel as nib

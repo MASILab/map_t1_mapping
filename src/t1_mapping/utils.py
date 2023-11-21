@@ -357,19 +357,19 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         n_pairs = len(pairs)
         n_readouts = len(inv)
 
-        # Calculate likelihood
-        likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
-        likelihood = np.nan_to_num(likelihood, nan=0)
-
         # Calculate posterior
-        posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
+        posterior[counts > 0] = counts / np.sum(delta_t1*counts)
         posterior = np.nan_to_num(posterior, nan=0)
 
         # MAP estimate
         map_est = np.max(posterior, axis=0)
+        map_args = np.argmax(posterior, axis=-1)
+
+        # Create LUT
+        t1_lut = t1[map_args]
 
         # Create grid
-        interp = RegularGridInterpolator(tuple(m), values=map_est,
+        interp = RegularGridInterpolator(tuple(m), values=t1_lut,
             bounds_error=False, fill_value=0, method='linear')
 
         # Calculate MP2RAGE images to get values at
