@@ -11,10 +11,13 @@ from adam_utils.nifti import load_slice
 from scipy.interpolate import RegularGridInterpolator, interpn
 
 # Seaborn and matplotlib defaults
-matplotlib.rcParams['grid.linewidth'] = 1
-matplotlib.rcParams['axes.linewidth'] = 1
 sns.set_style('ticks')
 sns.set_context('paper')
+matplotlib.rcParams['grid.linewidth'] = 1
+matplotlib.rcParams['axes.linewidth'] = 1
+plt.rcParams['axes.labelsize'] = 14
+plt.rcParams['xtick.labelsize'] = 14
+plt.rcParams['ytick.labelsize'] = 14
 save_fig = True
 
 # Display T1 versus S1,2
@@ -56,10 +59,9 @@ ax.hlines(y, xlims[0], x, linestyle='dashed', color='b')
 ax.set_xlim(xlims)
 ax.set_ylim(ylims)
 ax.plot(x, y, 'b.', markersize=10)
-ax.set_title('Point estimate of $T_1$ given $S_{1,2}$')
 
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/fig2_part1.png', dpi=600)
+    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/eqn_lut.png', dpi=600)
 
 # Calculate posterior
 n_pairs = 2
@@ -74,7 +76,7 @@ map_int = np.interp(subj_data['S1_2'].values, subj.m[0], map_est)
 
 # Plot 3D figure
 m = subj_data['S1_2'].values
-fig = plt.figure(figsize=(3.8, 3.25), layout='constrained')
+fig = plt.figure(figsize=(5,4), layout='constrained')
 ax = fig.add_subplot(projection='3d')
 ax.set_proj_type('ortho')
 ax.plot(subj.t1, m, map_int, color='k')
@@ -106,14 +108,24 @@ for s_slice in range(5):
 
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')
-ax.set_zlabel('$P(T_1 | S_{1,2})$')
+ax.set_zlabel('$P(T_1 | S_{1,2})$', labelpad=10)
 ax.view_init(20, -20, 0)
 ax.invert_xaxis()
 ax.set_zlim([0, 0.05])
-ax.set_title('Posterior distribution $P(T_1 | S_{1,2})$')
-
 
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/fig2_part2.png', dpi=600)
+    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/posterior.png', dpi=600)
+
+# Monte carlo distribution density plot using pcolormesh
+counts = np.load(subj.monte_carlo)
+counts_nonzero = np.where(counts == 0, 1, counts)
+fig, ax = plt.subplots(figsize=(3.8, 3), layout='constrained')
+m = ax.pcolormesh(subj.m[0], subj.t1, counts_nonzero, cmap='viridis', norm='log')
+ax.set_xlabel('$S_{1,2}$')
+ax.set_ylabel('$T_1$ (s)')
+fig.colorbar(m, ax=ax, label='Counts (log scale)')
+
+if save_fig:
+    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/monte_carlo.png', dpi=600)
 
 plt.show()

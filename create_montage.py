@@ -16,19 +16,13 @@ print(subject_ids)
 for subject_id in tqdm(subject_ids):
     if subject_id not in ground_truth_df['Subject'].values:
         continue
-    try:
-    
-        t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut', subject_id, 't1_map.nii')
-        # t1_truth = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_mask', subject_id, 't1_map.nii.gz')
+    t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 't1w_strip_rigid', subject_id, 'reg_t1_map.nii.gz')
+    t1_truth = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_mask', subject_id, 't1_map.nii.gz')
 
-        output_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage')
-        output = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage', subject_id)
+    output_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage')
+    output = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage', subject_id)
 
-        # Create montage
-        os.makedirs(output_folder, exist_ok=True)
-        montage_to_png(t1, output, num_slices=3, vmin=0, vmax=5)
+    # Create montage
+    os.makedirs(output_folder, exist_ok=True)
+    montage_to_png(t1, output, overlay=t1_truth, num_slices=3, vmin=0, vmax=5)
 
-    except FileNotFoundError:
-        print(f'File not found for {subject_id}')
-        continue
-    

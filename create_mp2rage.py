@@ -1,4 +1,4 @@
-# Create T1 map using MP2RAGE data (3 GREs)
+# Create MP2RAGE data
 import os
 import t1_mapping
 import nibabel as nib
@@ -13,8 +13,9 @@ control_subj = groups['Health Control Scans'].dropna().astype(np.int64)
 ms_subj = groups['MS Patient Scans'].dropna().astype(np.int64)
 
 # Loop through subjects
-for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
+for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     subj_id = int(subject)
+    subj_path = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_t1w', subject)
     if subj_id in ms_subj.to_numpy():
         group = 'ms'
     elif subj_id in control_subj.to_numpy():
@@ -22,6 +23,10 @@ for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
     else:
         print(f'Skipping {subj_id}')
         group = 'n/a'
+        continue
+
+    if os.path.exists(subj_path) and 't1w.nii' in os.listdir(subj_path):
+        print(f'Already did {subj_id}')
         continue
 
     # Get list of scans
@@ -46,18 +51,18 @@ for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
     times = list(set(times))
     times = sorted(t for t in times)
     times = [times[0], times[1]]
+    print(f'{subj_id}: {times}')
 
     # Create MP2RAGE subject
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id=subject,
         scan=chosen_scan,
-        scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'), 
-        all_inv_combos=False,
+        scan_times=times
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'test', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_t1w', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
-    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map_s1_2.nii'))
+    t1w = subj.mp2rage[0]
+    t1w.to_filename(os.path.join(save_folder, 't1w.nii'))

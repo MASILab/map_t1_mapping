@@ -1,9 +1,9 @@
 # Register the ground truth T1 maps to the generated T1 maps
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-inputDir="$dataDir/t1_maps_likelihood"
-stripDir="$dataDir/t1_maps_likelihood_strip"
-outputDir="$dataDir/t1_maps_likelihood_strip_rigid"
-fixedDir="$dataDir/t1_maps_truth_inf_to_zero"
+inputDir="$dataDir/mp2rage_t1w"
+stripDir="$dataDir/t1w_strip"
+outputDir="$dataDir/t1w_strip_rigid"
+fixedDir="$dataDir/ground_truth_masks"
 
 #for subj_path in "$fixedDir"/*/; do
 for subj_path in "$fixedDir"/*/; do
@@ -15,6 +15,6 @@ for subj_path in "$fixedDir"/*/; do
     mkdir -p $stripDir/$subj_id
 
     # Perform skull stripping
-    ../synthstrip/synthstrip-singularity -i $inputDir/$subj_id/t1_map.nii -o $stripDir/$subj_id/t1_map.nii -m $stripDir/$subj_id/mask.nii 
+    ../synthstrip/synthstrip-singularity -i $inputDir/$subj_id/t1w.nii -o $stripDir/$subj_id/t1w.nii -m $stripDir/$subj_id/mask.nii 
 
 done | tee /dev/tty | tqdm --total `ls -d $fixedDir/*/ | wc -l` >/dev/null
