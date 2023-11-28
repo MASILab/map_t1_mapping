@@ -16,6 +16,7 @@ ms_subj = groups['MS Patient Scans'].dropna().astype(np.int64)
 for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     subj_id = int(subject)
     subj_path = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_t1w', subject)
+    data_dir = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_converted_v2023', subject)
     if subj_id in ms_subj.to_numpy():
         group = 'ms'
     elif subj_id in control_subj.to_numpy():
@@ -25,7 +26,7 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
         group = 'n/a'
         continue
 
-    if os.path.exists(subj_path) and 't1w.nii' in os.listdir(subj_path):
+    if os.path.exists(subj_path) and 't1w.nii.gz' in os.listdir(subj_path):
         print(f'Already did {subj_id}')
         continue
 
@@ -40,9 +41,11 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
 
     # Get scan that starts with highest primary scan ID
     chosen_scan = [s for s in scan if s.startswith(str(highest_primary_scan_id))][0]
+    print(f'{chosen_scan=}')
 
     # Find scan times
-    data_files = os.listdir(os.path.join(t1_mapping.definitions.DATA, subject, chosen_scan))
+    data_files = os.listdir(os.path.join(data_dir, chosen_scan))
+    print(f'{data_files=}')
 
     # Get scan times from files
     times = [re.findall(r'\d{4}(?=\.)', s)[0] for s in data_files]
@@ -61,8 +64,5 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_t1w', str(subj_id))
-
-    os.makedirs(save_folder, exist_ok=True)
-    t1w = subj.mp2rage[0]
-    t1w.to_filename(os.path.join(save_folder, 't1w.nii'))
+    os.makedirs(subj_path, exist_ok=True)
+    subj.t1w.to_filename(os.path.join(subj_path, 't1w.nii.gz'))
