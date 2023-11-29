@@ -44,11 +44,11 @@ for subject in sorted(os.listdir(t1_mapping.definitions.DATA)):
 
     dcm = data_files[0]
 
-    #info = os.popen(f'dcminfo {path}/{dcm}').read()
+    info = os.popen(f'dcminfo {path}/{dcm}').read()
     #print(info)
 
-    #num_series = len([line for line in info.split('\n') if 'image type' in line])
-    #print(f'There are {num_series} series in {subj_id}')
+    num_series = len([line for line in info.split('\n') if 'image type' in line])
+    print(f'There are {num_series} series in {subj_id}')
 
-    ds = pydicom.dcmread(f'{path}/{dcm}', stop_before_pixels=True)
-    print(f"{subj_id}: echo time {ds.PerFrameFunctionalGroupsSequence[0][0x2005,0x140f][0][0x0018,0x0081]}")
+    # ds = pydicom.dcmread(f'{path}/{dcm}', stop_before_pixels=True)
+    # print(f"{subj_id}: echo time {ds.PerFrameFunctionalGroupsSequence[0][0x2005,0x140f][0][0x0018,0x0081]}")

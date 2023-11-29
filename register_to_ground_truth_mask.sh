@@ -1,16 +1,16 @@
 # Register the ground truth T1 maps to the generated T1 maps
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-regDir="$dataDir/t1_maps_likelihood_strip_rigid"
+regDir="$dataDir/t1w_strip_rigid"
 maskDir="$dataDir/ground_truth_masks"
 
-inputDir="$dataDir/t1_maps_likelihood_all"
+inputDir="$dataDir/std_maps_s1_2"
 outputDir="${inputDir}_mask"
 
 tempDir="/nfs/masi/saundam1/temp"
 
-filename="t1_map.nii"
+filename="std_map.nii.gz"
 #for subj_path in "$inputDir"/*/; do
-for subj_path in "$inputDir"/*/; do
+for subj_path in "$inputDir"/334264 "$inputDir"/335749 $inputDir/336954; do
     subj_id=`basename $subj_path`
     echo $subj_id
 

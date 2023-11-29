@@ -77,7 +77,7 @@ stat, p3 = wilcoxon(rmse_s1_3_array, rmse_lut_array, zero_method=zero_method)
 print(f'Wilcoxon signed-rank test between S1_3 alone and LUT: {p3=}')
 
 data = [rmse_lut_array, rmse_both_array, rmse_s1_2_array, rmse_s1_2_array]
-fig, ax = plt.subplots(figsize=(6.5,4))
+fig, ax = plt.subplots(figsize=(7,6))
 ax = sns.violinplot(data=data, inner='quartile', cut=0)
 
 # Add p-values and data points
@@ -86,7 +86,9 @@ annotator = Annotator(ax, pairs=[(0, 1), (0, 2), (0, 3)], data=data)
 annotator.configure(text_format='simple')
 annotator.set_pvalues([p1, p2, p3]).annotate()
 
-ax.set_xticks(range(4), labels=['Original point estimate\nMP2RAGE $T_1$', 'MAP $T_1$ using\n$S_{1,2}$ and $S_{1,3}$', 'MAP $T_1$ using\n$S_{1,2}$ only', 'MAP $T_1$ using\n$S_{1,3}$ only'])
+ax.set_xticks(range(4), labels=['Original point\nestimate $T_1$', 'MAP $T_1$ using\n$S_{1,2}$ and $S_{1,3}$', 'MAP $T_1$ using\n$S_{1,2}$ only', 'MAP $T_1$ using\n$S_{1,3}$ only'])
 ax.set_ylabel('RMSE compared to ground truth $T_1$ (s)')
 
 plt.show()
+
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/quantitative_results.png', dpi=600)

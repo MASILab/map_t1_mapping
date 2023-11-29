@@ -12,7 +12,7 @@ subj_lut = t1_mapping.mp2rage.MP2RAGESubject(
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
 )
-t1_lut = subj_lut.t1_map
+t1_lut = subj_lut.t1_map('linear')
 t1_lut_slice = load_slice(t1_lut, view=2)
 
 subj_like = t1_mapping.mp2rage.MP2RAGESubject(
@@ -22,7 +22,7 @@ subj_like = t1_mapping.mp2rage.MP2RAGESubject(
     monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
     all_inv_combos=False,
 )
-t1_like = subj_like.t1_map
+t1_like = subj_like.t1_map('likelihood')
 t1_like_slice = load_slice(t1_like, view=2)
 
 t1_ev = subj_like.t1_ev
@@ -32,7 +32,7 @@ t1_var = subj_like.t1_var
 t1_std = nib.Nifti1Image(np.sqrt(t1_var.dataobj), subj_like.affine)
 t1_std_slice = load_slice(t1_std, view=2)
 
-fig, axes = plt.subplots(2, 2, figsize=(6.5, 6.5))
+fig, axes = plt.subplots(3, 5, figsize=(6.5, 6.5))
 im = axes[0,0].imshow(t1_lut_slice, 'gray', vmin=0, vmax=5)
 axes[0,0].set_title('Original MP2RAGE $T_1$ Map')
 axes[0,0].set_axis_off()
