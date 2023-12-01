@@ -39,16 +39,33 @@ for subject in sorted(os.listdir(t1_mapping.definitions.DATA)):
 
     # Find scan times
 
-    path = os.path.join('/nfs/masi/saundam1/datasets/MP2RAGE', subject, subject, chosen_scan, 'DICOM')
-    data_files = os.listdir(path)
+    # path = os.path.join('/nfs/masi/saundam1/datasets/MP2RAGE', subject, subject, chosen_scan, 'DICOM')
+    # data_files = os.listdir(path)
 
-    dcm = data_files[0]
+    # dcm = data_files[0]
 
-    info = os.popen(f'dcminfo {path}/{dcm}').read()
+
+    # info = os.popen(f'dcminfo {path}/{dcm}').read()
     #print(info)
 
-    num_series = len([line for line in info.split('\n') if 'image type' in line])
-    print(f'There are {num_series} series in {subj_id}')
+    # num_series = len([line for line in info.split('\n') if 'image type' in line])
+    # print(f'There are {num_series} series in {subj_id}')
 
     # ds = pydicom.dcmread(f'{path}/{dcm}', stop_before_pixels=True)
-    # print(f"{subj_id}: echo time {ds.PerFrameFunctionalGroupsSequence[0][0x2005,0x140f][0][0x0018,0x0081]}")
+    # print(f"{subj_id}: scanner {ds.StationName}")
+
+    path = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_converted_v2023', subject, chosen_scan)
+
+    range_r1 = os.popen(f'fslstats {path}/{highest_primary_scan_id}_real_t{1010}.nii -R').read()
+    range_i1 = os.popen(f'fslstats {path}/{highest_primary_scan_id}_imaginary_t{1010}.nii -R').read()
+    range_r2 = os.popen(f'fslstats {path}/{highest_primary_scan_id}_real_t{3310}.nii -R').read()
+    range_i2 = os.popen(f'fslstats {path}/{highest_primary_scan_id}_imaginary_t{3310}.nii -R').read()
+    range_r3 = os.popen(f'fslstats {path}/{highest_primary_scan_id}_real_t{5610}.nii -R').read()
+    range_i3 = os.popen(f'fslstats {path}/{highest_primary_scan_id}_imaginary_t{5610}.nii -R').read()
+
+    print(
+        f'{subj_id}: \
+        \nGRE 1\treal {range_r1}\timag {range_i1} \
+        \nGRE 2\treal {range_r2}\timag {range_i2}\
+        \nGRE 3\treal {range_r3}\timag {range_i3}'
+    )

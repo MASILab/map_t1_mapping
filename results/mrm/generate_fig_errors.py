@@ -41,6 +41,7 @@ for i, subject in enumerate(['334264', '335749', '336954']):
 # Add colorbars
 cbar1 = fig.colorbar(t, ax=axes)
 cbar1.ax.set_xlabel('s')
+cbar1.ax.set_ylabel('Error compared to ground truth')
 
 plt.show()
 

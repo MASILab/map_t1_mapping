@@ -18,14 +18,15 @@ matplotlib.rcParams['axes.linewidth'] = 1
 plt.rcParams['axes.labelsize'] = 14
 plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
-save_fig = True
+save_fig = False
+monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.001.npy'
 
 # Display T1 versus S1,2
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'), 
+    monte_carlo=monte_carlo, 
     all_inv_combos=False,
 )
 

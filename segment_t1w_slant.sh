@@ -1,9 +1,9 @@
 # Segment T1w images using SLANT
 
 # Loop over subjects
-for input_folder in /home/saundam1/temp_data/mp2rage_t1w_mask/*; do
+for input_folder in /home/saundam1/temp_data/mp2rage_t1w_norm/*; do
     subj_id=`basename $input_folder`
-    output_folder="/home/saundam1/temp_data/mp2rage_t1w_mask_slant/$subj_id"
+    output_folder="/home/saundam1/temp_data/mp2rage_t1w_norm_slant/$subj_id"
     
     mkdir -p $output_folder
 
