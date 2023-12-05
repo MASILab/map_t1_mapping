@@ -3,7 +3,7 @@ dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
 regDir="$dataDir/t1w_strip_rigid"
 maskDir="$dataDir/ground_truth_masks"
 
-inputDir="$dataDir/sensitivity/t1_maps_s1_2_0.1"
+inputDir="$dataDir/sensitivity/t1_maps_s1_2_0.0005"
 outputDir="${inputDir}_mask"
 
 tempDir="/nfs/masi/saundam1/temp"

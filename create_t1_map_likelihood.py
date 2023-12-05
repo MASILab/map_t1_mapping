@@ -52,12 +52,12 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
         subject_id=subject,
         scan=chosen_scan,
         scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.1.npy'), 
+        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0005.npy'), 
         all_inv_combos=False,
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS,'sensitivity', 't1_maps_s1_2_0.1', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS,'sensitivity', 't1_maps_s1_2_0.0005', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
 #    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)

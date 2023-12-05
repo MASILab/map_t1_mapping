@@ -19,7 +19,7 @@ plt.rcParams['axes.labelsize'] = 14
 plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 save_fig = False
-monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.001.npy'
+monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.0001.npy'
 
 # Display T1 versus S1,2
 subj = t1_mapping.mp2rage.MP2RAGESubject(
