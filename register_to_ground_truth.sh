@@ -1,12 +1,11 @@
 # Register the ground truth T1 maps to the generated T1 maps
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-#outputDir="$dataDir/t1_maps_likelihood_s1_3_rigid_open"
 outputDir="$dataDir/t1w_strip_rigid"
 movingDir="$dataDir/t1w_strip"
-fixedDir="$dataDir/t1_maps_truth_inf_to_zero"
+fixedDir="$dataDir/t1_maps_truth_mask"
 
 #for subj_path in "$fixedDir"/*/; do
-for subj_path in "$fixedDir"/*/; do
+for subj_path in 335561; do
     subj_id=`basename $subj_path`
     #subj_id=$subj_path
     echo $subj_id
@@ -21,9 +20,9 @@ for subj_path in "$fixedDir"/*/; do
         --interpolation Linear \
         --use-histogram-matching 0 \
         --winsorize-image-intensities [ 0.005,0.995 ] \
-        --initial-moving-transform [ $fixedDir/$subj_id/t1_map.nii,$movingDir/$subj_id/t1w.nii, 0] \
+        --initial-moving-transform [ $fixedDir/$subj_id/t1_map.nii.gz,$movingDir/$subj_id/t1w.nii, 0] \
         --transform Rigid[ 0.1 ] \
-        --metric MI[ $fixedDir/$subj_id/t1_map.nii,$movingDir/$subj_id/t1w.nii,1,32,Regular,0.25 ]\
+        --metric MI[ $fixedDir/$subj_id/t1_map.nii.gz,$movingDir/$subj_id/t1w.nii,1,32,Regular,0.25 ]\
         --convergence [ 1000x500x250x100,1e-6,10 ] \
         --shrink-factors 12x8x4x2 \
         --smoothing-sigmas 4x3x2x1vox 

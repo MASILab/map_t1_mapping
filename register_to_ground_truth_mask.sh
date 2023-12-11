@@ -3,14 +3,14 @@ dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
 regDir="$dataDir/t1w_strip_rigid"
 maskDir="$dataDir/ground_truth_masks"
 
-inputDir="$dataDir/sensitivity/t1_maps_s1_2_0.0005"
+inputDir="$dataDir/sensitivity/t1_maps_s1_2_0.1"
 outputDir="${inputDir}_mask"
 
 tempDir="/nfs/masi/saundam1/temp"
 
 filename="t1_map.nii.gz"
 #for subj_path in "$inputDir"/*/; do
-for subj_path in "$inputDir"/*/; do
+for subj_path in 335561; do
     subj_id=`basename $subj_path`
     echo $subj_id
 
