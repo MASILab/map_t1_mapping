@@ -8,7 +8,7 @@ outputDir="$dataDir/slant_mp2rage_nss_mask"
 
 tempDir="/home/saundam1/tmp"
 
-for subj_path in 335561; do
+for subj_path in $inputDir/*/; do
     subj_id=$(basename $subj_path)
     echo $subj_id
     filename="$subj_id/out/post/FinalResult/t1w_seg.nii.gz"
