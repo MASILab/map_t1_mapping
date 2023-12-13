@@ -3,7 +3,7 @@ import numpy as np
 import vedo
 import os
 import t1_mapping
-import adam_utils
+from adam_utils.vedo import equal_axes
 import nibabel as nib
 
 # Load subject
@@ -28,13 +28,13 @@ mp2rage2 = t1_mapping.utils.mp2rage_t1w(GRE[0, :], GRE[2, :])
 
 # Load data
 points = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, "points_1K.npy"))
-t1_truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_affine', subj.subject_id, 'Warped.nii.gz'))
-t1_truth_data = t1_truth.get_fdata()
-mask = t1_truth_data > 0
-m1 = subj.mp2rage[0].get_fdata()
-m2 = subj.mp2rage[1].get_fdata()
-t1_map = subj.t1_map.get_fdata()
-points2 = np.array(list(zip(m1[mask > 0], m2[mask > 0], t1_map[mask > 0])))
+# t1_truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_affine', subj.subject_id, 'Warped.nii.gz'))
+# t1_truth_data = t1_truth.get_fdata()
+# mask = t1_truth_data > 0
+# m1 = subj.mp2rage[0].get_fdata()
+# m2 = subj.mp2rage[1].get_fdata()
+# t1_map = subj.t1_map.get_fdata()
+# points2 = np.array(list(zip(m1[mask > 0], m2[mask > 0], t1_map[mask > 0])))
 
 # Make data to plot
 X, Y, Z = np.meshgrid(mp2rage1, mp2rage2, t1_estimate)
@@ -46,13 +46,13 @@ pts = vedo.Points(points, r=10)
 vol = pts.density().c("jet").alpha([0, 1])
 
 # Generate colorbar
-vol.add_scalarbar(title="Density", c="k", nlabels=2, pos=(0.8, 0.3), size=(None, 500))
+# vol.add_scalarbar(title="Density", c="k", nlabels=2, pos=(0.8, 0.3), size=(None, 500))
 
 # Specify maximum intensity projection
 vol.mode(1)
 
 # Scale to have equal axes
-scale, values_and_labels, ranges = adam_utils.vedo.equal_axes(xlim=[-0.5,0.5], ylim=[-0.5,0.5], zlim=[0, 5])
+scale, values_and_labels, ranges = equal_axes(xlim=[-0.5,0.5], ylim=[-0.5,0.5], zlim=[0, 5])
 vol.scale(scale)
 
 # Customize axes and tick labels

@@ -41,7 +41,8 @@ ax1.set_title('Single MP2RAGE Signal')
 m1 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 m2 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[2,:])
 
-ax2 = fig.add_subplot(1,2,2, projection='3d')
+fig = plt.figure(figsize=(5,4))
+ax2 = fig.add_subplot(projection='3d')
 ax2.view_init(27, -116, 0)
 ax2.plot(m1, m2, subj.t1, label='Calculated values')
 ax2.set_xlabel('$S_{1,2}$')
@@ -58,5 +59,5 @@ ax2.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zdir='z', color=[0,1,0,0
 ax2.legend()
 ax2.set_title('Multiple MP2RAGE Signals')
 
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/ISMRM_figures/Figure_1.tiff', dpi=600)
+fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/problem_multi_echo.png', dpi=600)
 plt.show()

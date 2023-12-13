@@ -13,7 +13,7 @@ control_subj = groups['Health Control Scans'].dropna().astype(np.int64)
 ms_subj = groups['MS Patient Scans'].dropna().astype(np.int64)
 
 # Loop through subjects
-for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
+for subject in os.listdir(t1_mapping.definitions.DATA):
     subj_id = int(subject)
     if subj_id in ms_subj.to_numpy():
         group = 'ms'
@@ -45,20 +45,22 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     # Get unique items and sort
     times = list(set(times))
     times = sorted(t for t in times)
-    times = [times[0], times[1]]
+    times = [times[0], times[2]]
 
-    # Create MP2RAGE subject
-    subj = t1_mapping.mp2rage.MP2RAGESubject(
-        subject_id=subject,
-        scan=chosen_scan,
-        scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0005.npy'), 
-        all_inv_combos=False,
-    )
+    alert = "!!!" if subject in ['336547', '336530', '336699', '336388'] else ""
+    print(f'{alert}{subject} with {chosen_scan}')
 
-    # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS,'sensitivity', 't1_maps_s1_2_0.0005', str(subj_id))
+    # # Create MP2RAGE subject
+    # subj = t1_mapping.mp2rage.MP2RAGESubject(
+    #     subject_id=subject,
+    #     scan=chosen_scan,
+    #     scan_times=times,
+    #     monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_3.npy'), 
+    #     all_inv_combos=False,
+    # )
 
-    os.makedirs(save_folder, exist_ok=True)
-#    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)
-    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
+    # # Calculate T1 map and save
+    # save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_3', str(subj_id))
+
+    # os.makedirs(save_folder, exist_ok=True)
+    # subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map.nii'))

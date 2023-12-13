@@ -1,6 +1,7 @@
 import os
 
 GROUND_TRUTH_MAT = '/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/7T_SIRqMT_R1maps'
+GROUND_TRUTH = '/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/'
 
 OUTPUTS = '/nfs/masi/saundam1/outputs/t1_mapping'
 DATA = os.path.join(OUTPUTS, 'mp2rage_converted_v2023')

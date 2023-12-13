@@ -1,4 +1,4 @@
-# Create T1 map using MP2RAGE data (3 GREs)
+# Create MP2RAGE data
 import os
 import t1_mapping
 import nibabel as nib
@@ -15,6 +15,8 @@ ms_subj = groups['MS Patient Scans'].dropna().astype(np.int64)
 # Loop through subjects
 for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     subj_id = int(subject)
+    subj_path = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_t1w', subject)
+    data_dir = os.path.join(t1_mapping.definitions.OUTPUTS, 'mp2rage_converted_v2023', subject)
     if subj_id in ms_subj.to_numpy():
         group = 'ms'
     elif subj_id in control_subj.to_numpy():
@@ -22,6 +24,10 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     else:
         print(f'Skipping {subj_id}')
         group = 'n/a'
+        continue
+
+    if os.path.exists(subj_path) and 't1w.nii.gz' in os.listdir(subj_path):
+        print(f'Already did {subj_id}')
         continue
 
     # Get list of scans
@@ -35,9 +41,11 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
 
     # Get scan that starts with highest primary scan ID
     chosen_scan = [s for s in scan if s.startswith(str(highest_primary_scan_id))][0]
+    print(f'{chosen_scan=}')
 
     # Find scan times
-    data_files = os.listdir(os.path.join(t1_mapping.definitions.DATA, subject, chosen_scan))
+    data_files = os.listdir(os.path.join(data_dir, chosen_scan))
+    print(f'{data_files=}')
 
     # Get scan times from files
     times = [re.findall(r'\d{4}(?=\.)', s)[0] for s in data_files]
@@ -46,19 +54,15 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     times = list(set(times))
     times = sorted(t for t in times)
     times = [times[0], times[1]]
+    print(f'{subj_id}: {times}')
 
     # Create MP2RAGE subject
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id=subject,
         scan=chosen_scan,
-        scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0005.npy'), 
-        all_inv_combos=False,
+        scan_times=times
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS,'sensitivity', 't1_maps_s1_2_0.0005', str(subj_id))
-
-    os.makedirs(save_folder, exist_ok=True)
-#    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)
-    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
+    os.makedirs(subj_path, exist_ok=True)
+    subj.t1w.to_filename(os.path.join(subj_path, 't1w.nii.gz'))

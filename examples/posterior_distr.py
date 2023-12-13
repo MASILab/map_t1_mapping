@@ -35,7 +35,7 @@ likelihood = np.nan_to_num(likelihood, nan=0)
 print(np.sum(likelihood[:,:,50]*delta_m[0]*delta_m[1])) # Should integrate to 1
 
 # Calculate posterior
-posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[:,:,np.newaxis]
+posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
 posterior = np.nan_to_num(posterior, nan=0)
 print(np.sum(posterior[50,50,:]*delta_t1)) # Should integrate to 1
 

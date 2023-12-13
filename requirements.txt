@@ -9,5 +9,3 @@ matplotlib
 # editable installation of local packages
 -e /home/local/VANDERBILT/saundam1/Documents/t1_mapping/
 
-# GitHub packages
-pymp2rage @ git+https://github.com/Gilles86/pymp2rage.git

@@ -42,7 +42,7 @@ if __name__ == '__main__':
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id='334264',
         scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-        scan_times=['1010', '3310', '5610'],
+        scan_times=['1010', '3310'], #5610
         all_inv_combos=args.all_inv_combos
     )
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     iterable_func = partial(accumulate_sums, m_ranges=subj.m_ranges)
     
-    print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes')
+    print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes and {sd} noise STD')
     ranges = [(i, i + iter_per_process) for i in range(0, num_trials, iter_per_process)]
     counts = np.zeros(shape)
     with Pool(processes=num_processes) as p:
