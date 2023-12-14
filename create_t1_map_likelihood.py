@@ -13,7 +13,7 @@ control_subj = groups['Health Control Scans'].dropna().astype(np.int64)
 ms_subj = groups['MS Patient Scans'].dropna().astype(np.int64)
 
 # Loop through subjects
-for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
+for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
     subj_id = int(subject)
     if subj_id in ms_subj.to_numpy():
         group = 'ms'
@@ -52,13 +52,13 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
         subject_id=subject,
         scan=chosen_scan,
         scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0005.npy'), 
+        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'), 
         all_inv_combos=False,
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS,'sensitivity', 't1_maps_s1_2_0.0005', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'test', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
 #    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)
-    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
+    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map_likelihood.nii.gz'))
