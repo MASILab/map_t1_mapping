@@ -35,14 +35,17 @@ if __name__ == '__main__':
     parser.add_argument("--num_process", type=int, help="Number of CPUs to use")
     parser.add_argument("--noise_std", type=float, default=0.005, help="Noise standard deviation")
     parser.add_argument("--all_inv_combos", action="store_true", help="Include all inversion combinations instead of just pairwise")
+    parser.add_argument("--times", nargs='+', type=int, help="List of inversion times to use (ex. --times 1 3, --times 1 2 3)")
 
     args = parser.parse_args()
 
     # Load subject
+    scan_times = ['1010', '3310', '5610']
+    times = [scan_times[t-1] for t in args.times]
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id='334264',
         scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-        scan_times=['1010', '3310'], #5610
+        scan_times=times,
         all_inv_combos=args.all_inv_combos
     )
 

@@ -16,33 +16,35 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     all_inv_combos=False
 )
 y = subj.t1
-x = subj.m 
-X,Y = np.meshgrid(x,y)
+x = subj.m[0] 
+X,Y = np.meshgrid(x,y, indexing='ij')
 Z = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'))
 
 # Calculate posterior distribution
-Z = Z / np.sum(Z * np.prod(subj.delta_m), axis=tuple(range(len(subj.pairs)+1)))
-print(np.sum(Z[0,:] * np.prod(subj.delta_m), axis=tuple(range(len(subj.pairs)))))
-Z[Z == 0] = 1e-8
+# Z = Z / np.sum(Z * np.prod(subj.delta_m), axis=-1)
+# print(np.sum(Z[0,:] * np.prod(subj.delta_m), axis=-1))
+# Z[Z == 0] = 1e-8
 
 # Creating a pcolormesh plot
 plt.figure(figsize=(8, 6))
 # pcm = plt.pcolormesh(X, Y, Z, cmap='viridis')
-pcm = plt.pcolormesh(x,y,Z, cmap='viridis', norm='log')
+pcm = plt.pcolormesh(X,Y,Z, cmap='viridis', norm='log')
 plt.colorbar(pcm, label='Z value')
 plt.xlabel('X axis')
 plt.ylabel('Y axis')
 plt.title('Pcolormesh plot with Maximum Values along Vertical Grids')
 
 # Find the indices of the maximum values along the columns
-max_inds = np.argmax(Z, axis=0)
+max_inds = np.argmax(Z, axis=-1)
 
 # Find the maximum values along the columns
-max_vals = np.max(Z, axis=0)
+max_vals = np.max(Z, axis=-1)
 
 # Get the x and y coordinates of the maximum values
-x_coords = X[max_inds, np.arange(Z.shape[1])]
-y_coords = Y[max_inds, np.arange(Z.shape[1])]
+# x_coords = X[max_inds, np.arange(Z.shape[1])]
+# y_coords = Y[max_inds, np.arange(Z.shape[1])]
+x_coords = subj.m[0]
+y_coords = subj.t1[max_inds]
 
 # Print the maximum values and their indices
 print(max_vals, max_inds)
@@ -51,7 +53,7 @@ print(max_vals, max_inds)
 plt.plot(x_coords, y_coords, 'r.-')
 
 # Plot counts for a couple values of m
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.001.npy'))
 t1 = subj.t1
 m = subj.m
 fig, ax = plt.subplots()
@@ -72,7 +74,7 @@ ax.set_xlabel('T1')
 ax.set_ylabel('Probability')
 ax.set_title('Probability for different values of m')
 
-prob = counts / np.sum(counts*subj.delta_t1, axis=0)
+prob = counts / np.sum(counts*subj.delta_t1, axis=-1)[:,np.newaxis]
 fig, ax = plt.subplots()
 for i in range(0, len(t1), 10):
     print(np.sum(prob[:,i] * subj.delta_t1))
@@ -82,20 +84,20 @@ ax.set_ylabel('Probability')
 ax.set_title('Probability for different values of m')
 
 # Find the indices of the maximum values along the columns
-max_inds = np.argmax(prob, axis=0)
+max_inds = np.argmax(prob, axis=-1)
 
 # Find the maximum values along the columns
-max_vals = np.max(prob, axis=0)
+max_vals = np.max(prob, axis=-1)
 
 # Get the x and y coordinates of the maximum values
-x_coords = X[max_inds, np.arange(prob.shape[1])]
-y_coords = Y[max_inds, np.arange(prob.shape[1])]
+x_coords = subj.m[0]
+y_coords = subj.t1[max_inds]
 
 # Print the maximum values and their indices
 plt.figure(figsize=(8, 6))
 prob[prob == 0] = 1e-8
 # pcm = plt.pcolormesh(X, Y, Z, cmap='viridis')
-pcm = plt.pcolormesh(x,y,prob, cmap='viridis', norm='log')
+pcm = plt.pcolormesh(X,Y,prob, cmap='viridis', norm='log')
 plt.colorbar(pcm, label='P(T1 | S_1,2) (log scale)')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
@@ -126,5 +128,14 @@ m[-1] = 0.5
 plt.plot(m, t1, 'w.-', label='Original point estimate')
 plt.xlabel('$S_{1,2}$')
 plt.ylabel('$T_1$ (s)')
+
+
+# Plot maximum counts
+prob2 = counts / np.sum(counts*subj.delta_t1, axis=-1)
+max_inds = np.argmax(prob2, axis=-1)
+x_coords = subj.m[0]
+y_coords = subj.t1[max_inds]
+plt.plot(x_coords, y_coords, 'r.-', label='Without broadcasting')
+
 plt.legend()
 plt.show()

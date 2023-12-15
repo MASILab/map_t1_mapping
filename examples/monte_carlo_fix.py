@@ -51,7 +51,7 @@ GRE = t1_mapping.utils.gre_signal(
     T1=t1,
     **eqn_params
 )
-print(np.min(GRE[0,:]), np.max(GRE[0,:]), np.mean(GRE[0,:]), np.std(GRE[0,:]))
+print(np.min(GRE[1,:]), np.max(GRE[1,:]), np.mean(GRE[1,:]), np.std(GRE[1,:]))
 m = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 sorted_idx = np.argsort(m)
 m = m[sorted_idx]
@@ -71,7 +71,7 @@ X,Y = np.meshgrid(subj.m,subj.t1,indexing='ij')
 # counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_test.npy'))
 
 # For each M, normalize T1
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0005.npy'))
 posterior = counts / np.sum(counts*subj.delta_t1, axis=-1)[:,np.newaxis]
 
 # For each M, find the T1 with the highest probability
