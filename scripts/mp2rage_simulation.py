@@ -1,37 +1,29 @@
-# Run Monte Carlo simulation with fix
-import numpy as np
-import t1_mapping
+# Create 3D probability distribution for T1
 import os
+import t1_mapping
+from t1_mapping.utils import mp2rage_t1w
+import nibabel as nib
+import numpy as np
+from math import floor
 from tqdm import tqdm
 import itertools
 from multiprocessing import Pool
 import argparse
 from functools import partial
 
-def accumulate_sums(iteration_range, subj, sd):
-    counts = np.zeros(tuple(len(m) for m in subj.m) + (len(subj.t1),))
-    m_new = [m[:,np.newaxis] for m in subj.m]
-    for i in range(*iteration_range):
-        # Get original point estimate LUT
-        GRE = t1_mapping.utils.gre_signal(
-            T1=subj.t1,
-            **subj.eqn_params
-        )
-        # Add complex-valued Gaussian noise
-        GRE = GRE.astype(np.complex64)
-        GRE += np.random.normal(0, sd, GRE.shape) + 1j*np.random.normal(0, sd, GRE.shape)
+# Define a function to accumulate sums into the shared counts matrix for a batch of trials
+def accumulate_sums(iteration_range, m_ranges):
+    counts = np.zeros(shape)
+    
+    for trial in range(*iteration_range):
+        s = np.random.default_rng(trial)
+        GRE_noisy = GRE + s.normal(scale=sd, size=GRE.shape) + 1j * s.normal(scale=sd, size=GRE.shape)
+        mp2rage_noisy = [mp2rage_t1w(GRE_noisy[i[0], :], GRE_noisy[i[1], :]) for i in subj.pairs]
 
-        m_idx = []
-        for idx, (i,j) in enumerate(subj.pairs):
-            m_iter = t1_mapping.utils.mp2rage_t1w(GRE[i,:], GRE[j,:])
-
-            dist = np.abs(m_new[idx] - m_iter)
-            m_idx.append(np.argmin(dist, axis=1))
-
-        t1_idx = np.arange(len(subj.t1))
-
-        # Add to counts
-        counts[*m_idx, t1_idx] += 1
+        for c in zip(*mp2rage_noisy, subj.t1):
+            coord = tuple([round((i - m_ranges[idx][0]) / subj.delta_m[idx]) for idx, i in enumerate(c[:-1])]) + (round(c[-1] / subj.delta_t1) - 1,)
+            coord_clip = tuple(max(0, value) for value in coord)
+            counts[coord_clip] += 1
 
     return counts 
 
@@ -50,6 +42,7 @@ if __name__ == '__main__':
     # Load subject
     scan_times = ['1010', '3310', '5610']
     times = [scan_times[t-1] for t in args.times]
+    print(times)
     subj = t1_mapping.mp2rage.MP2RAGESubject(
         subject_id='334264',
         scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
@@ -57,15 +50,27 @@ if __name__ == '__main__':
         all_inv_combos=args.all_inv_combos
     )
 
+    # Calculate what values would be produced using these parameters
+    GRE = t1_mapping.utils.gre_signal(T1=subj.t1, **subj.eqn_params)
+
+    # Now simulate with noise
+    shape = tuple([m.shape[0] for m in subj.m])
+    shape = shape + (subj.t1.shape[0],)
+    n_inv = len(subj.scan_times)
+
+    # Create normal distribution
+    sd = args.noise_std
+    print(subj.pairs)
+
     num_trials = args.num_trials
     num_processes = args.num_process
     iter_per_process = num_trials // num_processes
 
-    iterable_func = partial(accumulate_sums, subj=subj, sd=args.noise_std)
+    iterable_func = partial(accumulate_sums, m_ranges=subj.m_ranges)
     
-    print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes and {args.noise_std} noise STD')
+    print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes and {sd} noise STD')
     ranges = [(i, i + iter_per_process) for i in range(0, num_trials, iter_per_process)]
-    counts = np.zeros(tuple(len(m) for m in subj.m) + (len(subj.t1),))
+    counts = np.zeros(shape)
     with Pool(processes=num_processes) as p:
         for x in tqdm(p.imap(iterable_func, ranges), total=num_processes):
             counts += x

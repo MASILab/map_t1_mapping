@@ -122,9 +122,12 @@ class MP2RAGESubject():
         # Load acquisition parameters
         params : t1_mapping.utils.MP2RAGEParameters = {
             "MP2RAGE_TR": 8.25,
-            "TR": self.inv_json[0]["RepetitionTime"],
-            "flip_angles": [i['FlipAngle'] for i in self.inv_json],
-            "inversion_times": [i['TriggerDelayTime']/1000 for i in self.inv_json],
+            # "TR": self.inv_json[0]["RepetitionTime"],
+            # "flip_angles": [i['FlipAngle'] for i in self.inv_json],
+            # "inversion_times": [i['TriggerDelayTime']/1000 for i in self.inv_json],
+            "TR": 0.006,
+            "flip_angles": [4.0, 4.0],
+            "inversion_times": [1010/1000, 3310/1000],
             "n": [225],
             "eff": 0.84,
         }

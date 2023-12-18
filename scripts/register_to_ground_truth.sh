@@ -5,7 +5,7 @@ movingDir="$dataDir/t1w_strip"
 fixedDir="$dataDir/t1_maps_truth_mask"
 
 #for subj_path in "$fixedDir"/*/; do
-for subj_path in 335561; do
+for subj_path in "$fixedDir"/*/; do
     subj_id=`basename $subj_path`
     #subj_id=$subj_path
     echo $subj_id

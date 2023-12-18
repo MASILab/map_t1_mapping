@@ -71,8 +71,9 @@ X,Y = np.meshgrid(subj.m,subj.t1,indexing='ij')
 # counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_test.npy'))
 
 # For each M, normalize T1
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0005.npy'))
-posterior = counts / np.sum(counts*subj.delta_t1, axis=-1)[:,np.newaxis]
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0006.npy'))
+# counts = counts.T
+posterior = counts / np.sum(counts*subj.delta_t1, axis=-1)[...,np.newaxis]
 
 # For each M, find the T1 with the highest probability
 max_inds = np.argmax(posterior, axis=-1)
