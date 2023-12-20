@@ -11,6 +11,12 @@ from multiprocessing import Pool
 import argparse
 from functools import partial
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+
 # Define a function to accumulate sums into the shared counts matrix for a batch of trials
 def accumulate_sums(iteration_range, m_ranges):
     counts = np.zeros(shape)
@@ -21,9 +27,10 @@ def accumulate_sums(iteration_range, m_ranges):
         mp2rage_noisy = [mp2rage_t1w(GRE_noisy[i[0], :], GRE_noisy[i[1], :]) for i in subj.pairs]
 
         for c in zip(*mp2rage_noisy, subj.t1):
-            coord = tuple([round((i - m_ranges[idx][0]) / subj.delta_m[idx]) for idx, i in enumerate(c[:-1])]) + (round(c[-1] / subj.delta_t1) - 1,)
-            coord_clip = tuple(max(0, value) for value in coord)
-            counts[coord_clip] += 1
+            # coord = tuple([round((i - m_ranges[idx][0]) / subj.delta_m[idx]) for idx, i in enumerate(c[:-1])]) + (round(c[-1] / subj.delta_t1) - 1,)
+            # coord_clip = tuple(max(0, value) for value in coord)
+            coord = tuple([find_nearest(subj.m[idx], i) for idx, i in enumerate(c[:-1])]) + (find_nearest(subj.t1, c[-1]),)
+            counts[coord] += 1
 
     return counts 
 

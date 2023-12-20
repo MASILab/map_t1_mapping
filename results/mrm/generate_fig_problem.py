@@ -8,10 +8,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 import pandas as pd
 from adam_utils.nifti import load_slice
+from scipy.spatial.distance import cdist
 
 # Seaborn and matplotlib defaults
 matplotlib.rcParams['grid.linewidth'] = 1
 matplotlib.rcParams['axes.linewidth'] = 1
+matplotlib.rcParams['font.size'] = 12
 sns.set_style('ticks')
 sns.set_context('paper')
 save_fig = True
@@ -21,7 +23,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0006.npy'), 
     all_inv_combos=False,
 )
 
@@ -36,20 +38,32 @@ subj_data = pd.DataFrame({
 })
 
 # Plot T1 versus S1,2
-fig, ax = plt.subplots(figsize=(3.5, 4.2))
-sns.lineplot(data=subj_data, x='S1_2', y='T1', ax=ax)
+fig, ax = plt.subplots(figsize=(3.25, 4))
+sns.lineplot(data=subj_data, x='S1_2', y='T1', ax=ax, color='b')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
-ax.set_title('MP2RAGE signal equation')
+ax.set_title('Single MP2RAGE signal')
 ax.grid(linewidth=1)
 
+# Add dashed lines and point at -0.2
+x = -0.2
+y = np.interp(x, subj_data['S1_2'].values[::-1], subj_data['T1'].values[::-1])
+xlims = ax.get_xlim()
+ylims = ax.get_ylim()
+ax.vlines(x, ylims[0], y, linestyle='dashed', color='b')
+ax.hlines(y, xlims[0], x, linestyle='dashed', color='b')
+ax.set_xlim(xlims)
+ax.set_ylim(ylims)
+ax.plot(x, y, 'b.', markersize=10)
+
+
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/fig1_part1.png', dpi=600)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_1.pdf', dpi=1200, bbox_inches='tight')
 
 # Plot axial slice of T1 map
 t1_map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut', subj.subject_id, 't1_map.nii'))
 t1_slice = load_slice(t1_map, view=2)
-fig, ax = plt.subplots(figsize=(3, 4))
+fig, ax = plt.subplots(figsize=(3.25, 4))
 im = ax.imshow(t1_slice, cmap='gray', vmin=0, vmax=5)
 ax.set_title('$T_1$ map')
 cbar = fig.colorbar(im, ax=ax)
@@ -57,14 +71,14 @@ ax.set_axis_off()
 cbar.ax.set_xlabel('s')
 
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/fig1_part2.png', dpi=600)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_2.pdf', dpi=1200, bbox_inches='tight')
 
 # Display T1 versus S1,2 and S1,3
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.0006.npy'), 
     all_inv_combos=False,
 )
 
@@ -82,7 +96,7 @@ subj_data = pd.DataFrame({
 # Plot T1 versus S1,2 and S1,3
 m1 = subj_data['S1_2'].values
 m2 = subj_data['S1_3'].values
-fig = plt.figure(figsize=(5, 4), layout='constrained')
+fig = plt.figure(figsize=(3.25, 4), layout='constrained')
 ax = fig.add_subplot(projection='3d')
 ax.plot(m1, m2, subj.t1, color='b')
 ax.set_xlabel('$S_{1,2}$')
@@ -96,8 +110,28 @@ ax.scatter(t1w1.flatten()[indx], t1w2.flatten()[indx], zdir='z', color=[0,1,0,0.
 ax.legend()
 ax.set_title('Multiple MP2RAGE signals')
 
+# Add dashed lines and point 
+pt = np.array([-0.2, -0.25])[:,np.newaxis]
+nodes = np.array([t1w1.flatten()[indx], t1w2.flatten()[indx]])
+print(pt.shape, nodes.shape)
+closest_ind = cdist(pt.T, nodes.T).argmin()
+x = t1w1.flatten()[indx][closest_ind]
+y = t1w2.flatten()[indx][closest_ind]
+z = 2
+xlims = ax.get_xlim()
+ylims = ax.get_ylim()
+zlims = ax.get_zlim()
+ax.text(x,y,z, '?', fontsize=14)
+ax.plot([x, xlims[1]], [y,y], [zlims[0],zlims[0]], 'b--', linewidth=1)
+ax.plot([x,x], [ylims[0],y], [zlims[0],zlims[0]], 'b--', linewidth=1)
+ax.plot([x,x], [y,y], [zlims[0],z], 'b--', linewidth=1)
+ax.set_xlim(xlims)
+ax.set_ylim(ylims)
+ax.set_zlim(zlims)
+
+
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/fig1_part3.png', dpi=600)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_3.pdf', dpi=1200, bbox_inches='tight')
 
 
 plt.show()

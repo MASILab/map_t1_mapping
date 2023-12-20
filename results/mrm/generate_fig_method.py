@@ -19,7 +19,7 @@ plt.rcParams['axes.labelsize'] = 14
 plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 save_fig = False
-monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.0001.npy'
+monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.0006.npy'
 
 # Display T1 versus S1,2
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -67,7 +67,7 @@ if save_fig:
 # Calculate posterior
 n_pairs = 2
 counts = np.load(subj.monte_carlo)
-posterior = counts / np.sum(counts * subj.delta_t1)
+posterior = counts / np.sum(counts * subj.delta_t1, axis=-1)[:,np.newaxis]
 
 # MAP estimate
 map_est = np.max(posterior, axis=-1)
@@ -112,7 +112,7 @@ ax.set_ylabel('$S_{1,2}$')
 ax.set_zlabel('$P(T_1 | S_{1,2})$', labelpad=10)
 ax.view_init(20, -20, 0)
 ax.invert_xaxis()
-ax.set_zlim([0, 0.05])
+# ax.set_zlim([0, 0.05])
 
 if save_fig:
     fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/posterior.png', dpi=600)

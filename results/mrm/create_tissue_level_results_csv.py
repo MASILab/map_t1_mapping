@@ -51,4 +51,4 @@ for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp
         df.loc[len(df)] = [subject, label, 'lut', tissue_label, lut_rmse]
 
 print(df)
-df.to_csv('/home/local/VANDERBILT/saundam1/Documents/t1_mapping/results/tissue_level_results.csv', index=False)
+df.to_csv('/home/local/VANDERBILT/saundam1/Documents/t1_mapping/results/slant_seg_results.csv', index=False)

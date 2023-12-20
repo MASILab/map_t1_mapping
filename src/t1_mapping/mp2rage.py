@@ -122,12 +122,12 @@ class MP2RAGESubject():
         # Load acquisition parameters
         params : t1_mapping.utils.MP2RAGEParameters = {
             "MP2RAGE_TR": 8.25,
-            # "TR": self.inv_json[0]["RepetitionTime"],
-            # "flip_angles": [i['FlipAngle'] for i in self.inv_json],
-            # "inversion_times": [i['TriggerDelayTime']/1000 for i in self.inv_json],
-            "TR": 0.006,
-            "flip_angles": [4.0, 4.0],
-            "inversion_times": [1010/1000, 3310/1000],
+            "TR": self.inv_json[0]["RepetitionTime"],
+            "flip_angles": [i['FlipAngle'] for i in self.inv_json],
+            "inversion_times": [i['TriggerDelayTime']/1000 for i in self.inv_json],
+            # "TR": 0.006,
+            # "flip_angles": [4.0, 4.0],
+            # "inversion_times": [1010/1000, 3310/1000],
             "n": [225],
             "eff": 0.84,
         }
@@ -165,7 +165,7 @@ class MP2RAGESubject():
                 method='likelihood',
                 monte_carlo=self.monte_carlo,
                 pairs=self.pairs,
-                likelihood_thresh=0.5
+                likelihood_thresh=0.1
             )
         elif method == 'map':
             t1_map = t1_mapping.utils.mp2rage_t1_map(
