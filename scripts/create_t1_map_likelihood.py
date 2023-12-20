@@ -45,7 +45,8 @@ for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
     data_files = os.listdir(os.path.join(t1_mapping.definitions.DATA, subject, chosen_scan))
 
     # Get scan times from files
-    times = [re.findall(r'\d{4}(?=\.)', s)[0] for s in data_files]
+    # times = [re.findall(r'\d{4}(?=\.)', s)[0] for s in data_files]
+    times = [1010, 3310, 5610]
 
     # Get unique items and sort
     times = list(set(times))
@@ -57,7 +58,7 @@ for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
         subject_id=subject,
         scan=chosen_scan,
         scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.001.npy'), 
+        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.0025.npy'), 
         all_inv_combos=False,
     )
 
@@ -66,6 +67,6 @@ for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
 
     os.makedirs(save_folder, exist_ok=True)
 #    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)
-    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map_all_0.001.nii.gz'))
+    subj.t1_map('likelihood').to_filename(os.path.join(save_folder, 't1_map_all_0.0025.nii.gz'))
     # subj.mp2rage[0].to_filename(os.path.join(save_folder, 't1w_s1_2.nii.gz'))
     # subj.mp2rage[1].to_filename(os.path.join(save_folder, 't1w_s1_3.nii.gz'))

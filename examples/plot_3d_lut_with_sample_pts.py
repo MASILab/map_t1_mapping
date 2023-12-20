@@ -8,7 +8,7 @@ import pandas as pd
 from adam_utils.nifti import plot_nifti
 
 # Load equation parameters
-monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.001.npy')
+monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.0025.npy')
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
@@ -47,7 +47,7 @@ alpha = max_L_gauss / (max_L_gauss + L_uni)
 # Create LUT
 max_L_gauss_ind = np.argmax(L_gauss, axis=-1)
 t1_lut = subj.t1[max_L_gauss_ind]
-likelihood_thresh = 0.
+likelihood_thresh = 0.5
 t1_lut[alpha < likelihood_thresh] = 0
 
 # Create grid

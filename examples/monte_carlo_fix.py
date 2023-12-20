@@ -11,7 +11,7 @@ import pandas as pd
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-    scan_times=['1010', '5610'], #5610
+    scan_times=['1010', '3310'], #5610
     all_inv_combos=False
 )
 eqn_params = subj.eqn_params
@@ -47,7 +47,7 @@ X,Y = np.meshgrid(subj.m,subj.t1,indexing='ij')
 # counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_test.npy'))
 
 # For each M, normalize T1
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_3_0.0006.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0006.npy'))
 posterior = counts / np.sum(counts*subj.delta_t1, axis=-1)[...,np.newaxis]
 
 # For each M, find the T1 with the highest probability
@@ -78,7 +78,7 @@ fig.colorbar(mesh, ax=ax, label='Counts (log scale)')
 fig, axes = plt.subplots(2,2)
 fig2, ax = plt.subplots()
 rng = np.random.default_rng()
-for n in [0.0006, 0]:
+for n in [0.01, 0]:
     t1 = np.linspace(0, 5, 10000)
     GRE = t1_mapping.utils.gre_signal(
         T1=t1,
