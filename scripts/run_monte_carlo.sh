@@ -5,7 +5,7 @@ basename="${output_dir}/counts_100M"
 # Run simulation for 2D and 3D
 num_trials=100000000 
 #num_trials=100000
-for noise_std in 0.0025; do
+for noise_std in 0.0005 0.001 0.005 0.01 0.015 0.02 0.025 0.05; do
     python mp2rage_simulation.py --output_path ${basename}_all_$noise_std.npy --num_trials $num_trials --num_process 19 --times 1 2 3 --noise_std $noise_std
     python mp2rage_simulation.py --output_path ${basename}_s1_3_$noise_std.npy --num_trials $num_trials --num_process 19 --times 1 3 --noise_std $noise_std
 #    python mp2rage_simulation.py --output_path ${basename}_s1_2_$noise_std.npy --num_trials $num_trials --num_process 19 --times 1 2 --noise_std $noise_std

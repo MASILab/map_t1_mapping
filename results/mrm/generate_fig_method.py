@@ -11,15 +11,13 @@ from adam_utils.nifti import load_slice
 from scipy.interpolate import RegularGridInterpolator, interpn
 
 # Seaborn and matplotlib defaults
-sns.set_style('ticks')
-sns.set_context('paper')
 matplotlib.rcParams['grid.linewidth'] = 1
 matplotlib.rcParams['axes.linewidth'] = 1
-plt.rcParams['axes.labelsize'] = 14
-plt.rcParams['xtick.labelsize'] = 14
-plt.rcParams['ytick.labelsize'] = 14
-save_fig = False
-monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.0006.npy'
+matplotlib.rcParams['font.size'] = 12
+sns.set_style('ticks')
+sns.set_context('paper')
+save_fig = True
+monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.005.npy'
 
 # Display T1 versus S1,2
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -41,7 +39,7 @@ subj_data = pd.DataFrame({
 })
 
 # Plot T1 versus S1,2
-fig, ax = plt.subplots(figsize=(3, 4.2), layout='constrained')
+fig, ax = plt.subplots(figsize=(1.5, 2))
 sns.lineplot(data=subj_data, x='S1_2', y='T1', ax=ax, color='k')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
@@ -61,8 +59,9 @@ ax.set_xlim(xlims)
 ax.set_ylim(ylims)
 ax.plot(x, y, 'b.', markersize=10)
 
+fig.tight_layout()
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/eqn_lut.png', dpi=600)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_1.pdf', dpi=1200, bbox_inches='tight', transparent=True)
 
 # Calculate posterior
 n_pairs = 2
@@ -71,16 +70,17 @@ posterior = counts / np.sum(counts * subj.delta_t1, axis=-1)[:,np.newaxis]
 
 # MAP estimate
 map_est = np.max(posterior, axis=-1)
+max_ind = np.argmax(posterior, axis=-1)
 
 # Interpolate MAP estimate along S1,2 (instead of M values)
-map_int = np.interp(subj_data['S1_2'].values, subj.m[0], map_est)
+# map_int = np.interp(subj_data['S1_2'].values, subj.m[0], map_est)
 
 # Plot 3D figure
 m = subj_data['S1_2'].values
-fig = plt.figure(figsize=(5,4), layout='constrained')
+fig = plt.figure(figsize=(3,2))
 ax = fig.add_subplot(projection='3d')
 ax.set_proj_type('ortho')
-ax.plot(subj.t1, m, map_int, color='k')
+ax.plot(subj.t1[max_ind], subj.m[0], map_est, color='k')
 
 
 # Interpolate posterior along S1,2 instead of M
@@ -98,14 +98,6 @@ for s_slice in range(5):
     # Plot dashed line to mode
     t1_mode = subj.t1[np.argmax(posterior_int[:,s_slice])]
     ax.plot([t1_mode, t1_mode], [s1_2_points[s_slice], s1_2_points[s_slice]], [0, np.max(posterior_int[:,s_slice])], color='b', linestyle='dashed', alpha=0.5)
-    
-    if s1_2_points[s_slice] == -0.2:
-        ax.plot(t1_mode, s1_2_points[s_slice], np.max(posterior_int[:,s_slice]), 'b.', markersize=10)
-        ylims = ax.get_ylim()
-        ax.plot([t1_mode, t1_mode], [s1_2_points[s_slice], ylims[0]], [0, 0], color='b', linestyle='dashed')
-        ax.plot([t1_mode, 0], [s1_2_points[s_slice], s1_2_points[s_slice]], [0, 0], color='b', linestyle='dashed')
-
-        ax.set_ylim(ylims)
 
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')
@@ -114,19 +106,101 @@ ax.view_init(20, -20, 0)
 ax.invert_xaxis()
 # ax.set_zlim([0, 0.05])
 
+# fig.tight_layout()
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/posterior.png', dpi=600)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_2.pdf', dpi=1200, bbox_inches='tight', transparent=True)
 
-# Monte carlo distribution density plot using pcolormesh
+# Monte carlo distribution density plot using pcolormeshFalse
 counts = np.load(subj.monte_carlo)
 counts_nonzero = np.where(counts == 0, 1, counts)
-fig, ax = plt.subplots(figsize=(3.8, 3), layout='constrained')
-m = ax.pcolormesh(subj.m[0], subj.t1, counts_nonzero, cmap='viridis', norm='log')
+fig, ax = plt.subplots(figsize=(2, 2))
+m = ax.pcolormesh(subj.m[0], subj.t1, counts_nonzero, cmap='viridis', norm='log', alpha=1, antialiased=True, rasterized=True)
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
 fig.colorbar(m, ax=ax, label='Counts (log scale)')
 
+fig.tight_layout()
 if save_fig:
-    fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/example_screenshots/monte_carlo.png', dpi=600)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_3.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+# Get slices of images
+gre1 = subj.inv[0]
+gre2 = subj.inv[1]
+mp2rage = subj.mp2rage[0]
+t1_map_lut = subj.t1_map('lut')
+t1_map_like = subj.t1_map('likelihood', thresh=0.5)
+std_map = subj.t1_std
+ev_map = subj.t1_ev
+
+gre1_real = nib.Nifti1Image(np.real(gre1.get_fdata(dtype=np.complex64)), gre1.affine, gre1.header)
+gre2_real = nib.Nifti1Image(np.real(gre2.get_fdata(dtype=np.complex64)), gre2.affine, gre2.header)
+
+# Get a slice
+gre1_slice = load_slice(gre1_real, view=2)
+gre2_slice = load_slice(gre2_real, view=2)
+mp2rage_slice = load_slice(mp2rage, view=2)
+t1_map_like_slice = load_slice(t1_map_like, view=2)
+t1_map_lut_slice = load_slice(t1_map_lut, view=2)
+std_map_slice = load_slice(std_map, view=2)
+ev_map_slice = load_slice(ev_map, view=2)
+
+gre1_slice_sag = load_slice(gre1_real, view=0)
+
+# Plot slices and save
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(gre1_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_gre1.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(gre2_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_gre2.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(mp2rage_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_mp2rage.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(t1_map_like_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_t1_like.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(t1_map_lut_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_t1_lut.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(std_map_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_std.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(ev_map_slice, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_ev.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(gre1_slice_sag, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_gre1_sag.pdf', dpi=1200, bbox_inches='tight', transparent=True)
 
 plt.show()

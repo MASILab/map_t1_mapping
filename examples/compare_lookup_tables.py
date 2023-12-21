@@ -53,7 +53,7 @@ print(max_vals, max_inds)
 plt.plot(x_coords, y_coords, 'r.-')
 
 # Plot counts for a couple values of m
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.001.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.005.npy'))
 t1 = subj.t1
 m = subj.m
 fig, ax = plt.subplots()

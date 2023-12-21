@@ -39,14 +39,14 @@ subj_data = pd.DataFrame({
 
 # Plot T1 versus S1,2
 fig, ax = plt.subplots(figsize=(3.25, 4))
-sns.lineplot(data=subj_data, x='S1_2', y='T1', ax=ax, color='b')
+sns.lineplot(data=subj_data, x='S1_2', y='T1', ax=ax, color='k')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
 ax.set_title('Single MP2RAGE signal')
 ax.grid(linewidth=1)
 
 # Add dashed lines and point at -0.2
-x = -0.2
+x = -0.15
 y = np.interp(x, subj_data['S1_2'].values[::-1], subj_data['T1'].values[::-1])
 xlims = ax.get_xlim()
 ylims = ax.get_ylim()
@@ -59,19 +59,6 @@ ax.plot(x, y, 'b.', markersize=10)
 
 if save_fig:
     fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_1.pdf', dpi=1200, bbox_inches='tight')
-
-# Plot axial slice of T1 map
-t1_map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut', subj.subject_id, 't1_map.nii'))
-t1_slice = load_slice(t1_map, view=2)
-fig, ax = plt.subplots(figsize=(3.25, 4))
-im = ax.imshow(t1_slice, cmap='gray', vmin=0, vmax=5)
-ax.set_title('$T_1$ map')
-cbar = fig.colorbar(im, ax=ax)
-ax.set_axis_off()
-cbar.ax.set_xlabel('s')
-
-if save_fig:
-    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_2.pdf', dpi=1200, bbox_inches='tight')
 
 # Display T1 versus S1,2 and S1,3
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -98,7 +85,7 @@ m1 = subj_data['S1_2'].values
 m2 = subj_data['S1_3'].values
 fig = plt.figure(figsize=(3.25, 4), layout='constrained')
 ax = fig.add_subplot(projection='3d')
-ax.plot(m1, m2, subj.t1, color='b')
+ax.plot(m1, m2, subj.t1, color='k')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$S_{1,3}$')
 ax.set_zlabel('$T_1$ (s)')
@@ -111,13 +98,13 @@ ax.legend()
 ax.set_title('Multiple MP2RAGE signals')
 
 # Add dashed lines and point 
-pt = np.array([-0.2, -0.25])[:,np.newaxis]
+pt = np.array([-0.15, -0.2])[:,np.newaxis]
 nodes = np.array([t1w1.flatten()[indx], t1w2.flatten()[indx]])
 print(pt.shape, nodes.shape)
 closest_ind = cdist(pt.T, nodes.T).argmin()
 x = t1w1.flatten()[indx][closest_ind]
 y = t1w2.flatten()[indx][closest_ind]
-z = 2
+z = 1
 xlims = ax.get_xlim()
 ylims = ax.get_ylim()
 zlims = ax.get_zlim()
@@ -129,9 +116,8 @@ ax.set_xlim(xlims)
 ax.set_ylim(ylims)
 ax.set_zlim(zlims)
 
-
 if save_fig:
-    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_3.pdf', dpi=1200, bbox_inches='tight')
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/problem_2.pdf', dpi=1200, bbox_inches='tight')
 
 
 plt.show()

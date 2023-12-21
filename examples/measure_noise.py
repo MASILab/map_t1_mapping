@@ -14,6 +14,13 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     all_inv_combos=False
 )
 
+# Measurements from ROI
+roi_mean = [31789, 89513, 89813]
+roi_range = [(21590, 40847), (77878, 97875), (79730, 103060)]
+all_range = [(-125053, 156384), (-150234, 206007), (158011, 181566)]
+roi_std = [3156, 3664, 4123]
+roi_snr = [m/s for m,s in zip(roi_mean, roi_std)]
+
 # Calculate GRE
 GRE = t1_mapping.utils.gre_signal(
     T1=subj.t1,
@@ -21,12 +28,12 @@ GRE = t1_mapping.utils.gre_signal(
 )
 
 # Print ranges
-GRE_ranges = [np.max(GRE[i,:]) - np.min(GRE[i,:]) for i in range(3)]
-print(f'GRE 1 range: {GRE_ranges[0]}')
-print(f'GRE 2 range: {GRE_ranges[1]}')
-print(f'GRE 3 range: {GRE_ranges[2]}')
-
-# Print what STD you need to get same CNR
-CNR = [9.49, 24.6, 22.35]
+# GRE_mean = np.mean(GRE, axis=1)
+GRE_range = [(np.min(GRE[i,:]), np.max(GRE[i,:])) for i in range(3)]
+mean_scaled = [0,0,0]
 for i in range(3):
-    print(f'GRE {i+1} STD: {GRE_ranges[i]/CNR[i]}')
+    mean_scaled[i] = (roi_mean[i] - roi_range[i][0])/(roi_range[i][1] - roi_range[i][0]) * (GRE_range[i][1] - GRE_range[i][0]) + GRE_range[i][0]
+# GRE_std = np.std(GRE, axis=1)
+
+desired_std = [m/snr for m,snr in zip(mean_scaled, roi_snr)]
+print(desired_std)

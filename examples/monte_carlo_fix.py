@@ -47,7 +47,7 @@ X,Y = np.meshgrid(subj.m,subj.t1,indexing='ij')
 # counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_test.npy'))
 
 # For each M, normalize T1
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0006.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.005.npy'))
 posterior = counts / np.sum(counts*subj.delta_t1, axis=-1)[...,np.newaxis]
 
 # For each M, find the T1 with the highest probability
@@ -79,12 +79,12 @@ fig, axes = plt.subplots(2,2)
 fig2, ax = plt.subplots()
 rng = np.random.default_rng()
 for n in [0.01, 0]:
-    t1 = np.linspace(0, 5, 10000)
+    t1 = np.linspace(0, 5, 100_000)
     GRE = t1_mapping.utils.gre_signal(
         T1=t1,
         **eqn_params
     )
-    noise = rng.standard_normal(size=GRE.shape)*n #+ 1j * rng.standard_normal(size=GRE.shape)*n
+    noise = rng.standard_normal(size=GRE.shape)*n + 1j * rng.standard_normal(size=GRE.shape)*n
     GRE = GRE + noise
     m = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
     # sorted_idx = np.argsort(m)
@@ -96,6 +96,29 @@ for n in [0.01, 0]:
     axes[1,0].scatter(GRE[0,:], m, label=f'Noise = {n}', s=0.5)
     axes[1,1].scatter(GRE[1,:], m, label=f'Noise = {n}', s=0.5)
     ax.scatter(m, t1, label=f'Noise = {n}', s=0.5)
+
+    if n == 0.01:
+        fig3, ax3 = plt.subplots()
+        counts, xedges, yedges = np.histogram2d(m, t1, bins=50)
+        ax3.hist2d(m, t1, bins=20, norm='log')
+        # Plot line along max value in each column of image
+        max_inds = np.argmax(counts, axis=-1)
+        max_vals = np.max(counts, axis=-1)
+        x_coords = xedges[:-1]
+        y_coords = yedges[max_inds]
+        ax3.plot(x_coords, y_coords, 'g.-', label='MAP T1 using $S_{1,2}$ alone')
+
+        # Plot original LUT
+        t1
+        GRE = t1_mapping.utils.gre_signal(
+            T1=t1,
+            **eqn_params
+        )
+        m = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
+        ax3.plot(m, t1, 'w.-', label='Original point estimate')
+
+        ax3.set_xlabel('$S_{1,2}$')
+        ax3.set_ylabel('$T_1$ (s)')
 
 axes[0,0].set_xlabel('$T_1$ (s)')
 axes[0,0].set_ylabel('GRE1')

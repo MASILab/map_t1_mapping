@@ -8,7 +8,7 @@ import pandas as pd
 from adam_utils.nifti import plot_nifti
 
 # Load equation parameters
-monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.0025.npy')
+monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy')
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
@@ -96,29 +96,5 @@ m_s1_3 = t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:])
 sorted_idx = np.argsort(m_s1_3)
 m_s1_3 = m_s1_3[sorted_idx]
 t1_lut_s1_3 = subj.t1[sorted_idx]
-
-fig, ax = plt.subplots(1,2)
-ax[0].plot(m_s1_2, t1_lut_s1_2, 'k.-', label='Lookup Table')
-ax[0].plot(subj.m[0], t1_lut[:, 0], label=f'$S_{1,2}$={subj.m[1][0]}')
-ax[0].plot(subj.m[0], t1_lut[:, 20], label=f'$S_{1,2}$={subj.m[1][20]}')
-ax[0].plot(subj.m[0], t1_lut[:, 40], label=f'$S_{1,2}$={subj.m[1][40]}')
-ax[0].plot(subj.m[0], t1_lut[:, 60], label=f'$S_{1,2}$={subj.m[1][60]}')
-ax[0].plot(subj.m[0], t1_lut[:, 80], label=f'$S_{1,2}$={subj.m[1][80]}')
-
-ax[0].set_xlabel('$S_{1,2}$')
-ax[0].set_ylabel('$T_1$ (s)')
-
-ax[1].plot(m_s1_3, t1_lut_s1_3, 'k.-', label='Lookup Table')
-ax[1].plot(subj.m[1], t1_lut[0,:], label=f'$S_{1,3}$={subj.m[0][0]}')
-ax[1].plot(subj.m[1], t1_lut[20,:], label=f'$S_{1,3}$={subj.m[0][20]}')
-ax[1].plot(subj.m[1], t1_lut[40,:], label=f'$S_{1,3}$={subj.m[0][40]}')
-ax[1].plot(subj.m[1], t1_lut[60,:], label=f'$S_{1,3}$={subj.m[0][60]}')
-ax[1].plot(subj.m[1], t1_lut[80,:], label=f'$S_{1,3}$={subj.m[0][80]}')
-
-ax[1].set_xlabel('$S_{1,3}$')
-ax[1].set_ylabel('$T_1$ (s)')
-
-ax[0].legend()
-ax[1].legend()
 
 plt.show()
