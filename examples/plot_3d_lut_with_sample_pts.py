@@ -8,7 +8,7 @@ import pandas as pd
 from adam_utils.nifti import plot_nifti
 
 # Load equation parameters
-monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy')
+monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M_all_custom.npy')
 subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',

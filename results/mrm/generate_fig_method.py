@@ -39,7 +39,7 @@ subj_data = pd.DataFrame({
 })
 
 # Plot T1 versus S1,2
-fig, ax = plt.subplots(figsize=(1.5, 2))
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
 sns.lineplot(data=subj_data, x='S1_2', y='T1', ax=ax, color='k')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
