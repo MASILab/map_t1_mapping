@@ -9,11 +9,11 @@ from adam_utils.nifti import load_slice
 fig, axes = plt.subplots(3,5, figsize=(6.5, 3))
 for i, subject in enumerate(['334264', '335749', '336954']):
     # Load niftis
-    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
-    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
-    map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject, f't1_map.nii.gz'))
-    ev = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'ev_maps_s1_2_mask', subject, f'ev_map.nii.gz'))
-    std = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'std_maps_s1_2_mask', subject, f'std_map.nii.gz'))
+    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
+    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
+    map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_mask', subject, f't1_map.nii.gz'))
+    ev = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'ev_maps_s1_2_mask', subject, f'ev_map.nii.gz'))
+    std = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_mask', subject, f'std_map.nii.gz'))
 
     # Load slices
     truth_slice = load_slice(truth, view=2)

@@ -23,7 +23,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.0006.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_custom.npy'), 
     all_inv_combos=False,
 )
 
@@ -46,7 +46,7 @@ ax.set_title('Single MP2RAGE signal')
 ax.grid(linewidth=1)
 
 # Add dashed lines and point at -0.2
-x = -0.15
+x = -0.35
 y = np.interp(x, subj_data['S1_2'].values[::-1], subj_data['T1'].values[::-1])
 xlims = ax.get_xlim()
 ylims = ax.get_ylim()
@@ -65,7 +65,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.0006.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_custom.npy'), 
     all_inv_combos=False,
 )
 
@@ -98,7 +98,7 @@ ax.legend()
 ax.set_title('Multiple MP2RAGE signals')
 
 # Add dashed lines and point 
-pt = np.array([-0.15, -0.2])[:,np.newaxis]
+pt = np.array([-0.35, -0.3])[:,np.newaxis]
 nodes = np.array([t1w1.flatten()[indx], t1w2.flatten()[indx]])
 print(pt.shape, nodes.shape)
 closest_ind = cdist(pt.T, nodes.T).argmin()

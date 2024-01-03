@@ -34,21 +34,36 @@ roi = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'robust_t1w_0.25', '
 fig, ax = plot_nifti(subj.mp2rage[0], slice=[102, 256, 256], mask=roi, mask_alpha=0.5)
 
 # Get data from NIFTI
-roi_mean = []
-roi_range = []
-roi_std = []
-all_range = []
+roi_mean_real = []
+roi_range_real = []
+roi_std_real = []
+all_range_real = []
+roi_mean_imag = []
+roi_range_imag = []
+roi_std_imag = []
+all_range_imag = []
 for i, inv in enumerate(subj.inv):
-    inv_data = np.real(inv.get_fdata(dtype=np.complex64))
-    roi_data = inv_data[roi.astype(bool)]
+    inv_data_real = np.real(inv.get_fdata(dtype=np.complex64))
+    roi_data_real = inv_data_real[roi.astype(bool)]
 
-    roi_mean.append(np.mean(roi_data))
-    roi_range.append((np.min(roi_data), np.max(roi_data)))
-    roi_std.append(np.std(roi_data))
-    all_range.append((np.min(inv_data), np.max(inv_data)))
+    roi_mean_real.append(np.mean(roi_data_real))
+    roi_range_real.append((np.min(roi_data_real), np.max(roi_data_real)))
+    roi_std_real.append(np.std(roi_data_real))
+    all_range_real.append((np.min(inv_data_real), np.max(inv_data_real)))
+
+    # Repeat for imaginary
+    inv_data_imag = np.imag(inv.get_fdata(dtype=np.complex64))
+    roi_data_imag = inv_data_imag[roi.astype(bool)]
+
+    roi_mean_imag.append(np.mean(roi_data_imag))
+    roi_range_imag.append((np.min(roi_data_imag), np.max(roi_data_imag)))
+    roi_std_imag.append(np.std(roi_data_imag))
+    all_range_imag.append((np.min(inv_data_imag), np.max(inv_data_imag)))
+
     
 # Calculate SNR
-roi_cnr = [(r[1]-r[0])/s for r,s in zip(all_range, roi_std)]
+roi_cnr_real = [(r[1]-r[0])/s for r,s in zip(all_range_real, roi_std_real)]
+roi_cnr_imag = [(r[1]-r[0])/s for r,s in zip(all_range_imag, roi_std_imag)]
 
 # Measurements from ROI
 # roi_mean = [31789, 89513, 89813]
@@ -70,7 +85,9 @@ GRE_range = [(np.min(GRE[i,:]), np.max(GRE[i,:])) for i in range(3)]
 # for i in range(3):
     # mean_scaled[i] = (roi_mean[i] - roi_range[i][0])/(roi_range[i][1] - roi_range[i][0]) * (GRE_range[i][1] - GRE_range[i][0]) + GRE_range[i][0]
 
-desired_std = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr)]
-print(desired_std)
+desired_std_real = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr_real)]
+desired_std_imag = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr_imag)]
+print(f'Real: {desired_std_real}')
+print(f'Imag: {desired_std_imag}')
 
 plt.show()

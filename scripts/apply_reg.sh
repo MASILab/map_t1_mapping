@@ -1,14 +1,14 @@
-# Register the ground truth T1 maps to the generated T1 maps
+# Register the generated T1 maps to ground truth
 dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-regDir="$dataDir/t1w_strip_rigid"
+regDir="$dataDir/robust_t1w_0.25_synthstrip_reg"
 maskDir="$dataDir/ground_truth_masks"
 
-inputDir="$dataDir/sensitivity/t1_maps_s1_2_0.0006"
+inputDir="$dataDir/slant_mp2rage_nss_0.25"
 outputDir="${inputDir}_mask"
 
 tempDir="/nfs/masi/saundam1/temp"
 
-filename="t1_map.nii.gz"
+filename="t1w_seg.nii.gz"
 #for subj_path in "$inputDir"/*/; do
 for subj_path in "$inputDir"/*/; do
     subj_id=`basename $subj_path`
@@ -18,10 +18,13 @@ for subj_path in "$inputDir"/*/; do
     mkdir -p $outputDir/$subj_id $tempDir/$subj_id
 
     # Apply trasformation
-    antsApplyTransforms -d 3 -i $inputDir/$subj_id/$filename -r $regDir/$subj_id/reg_t1_map.nii.gz -t $regDir/$subj_id/0GenericAffine.mat -n Linear -o $tempDir/$subj_id/$filename
+    antsApplyTransforms -d 3 -i $inputDir/$subj_id/$filename -r $regDir/$subj_id/t1w.nii.gz -t $regDir/$subj_id/0GenericAffine.mat -n NearestNeighbor -o $tempDir/$subj_id/$filename
 
     # Apply mask
-    fslmaths $tempDir/$subj_id/$filename -mas $maskDir/$subj_id/mask.nii $outputDir/$subj_id/$filename
+    fslmaths $tempDir/$subj_id/$filename -mas $maskDir/$subj_id/mask.nii.gz $outputDir/$subj_id/$filename
+
+    # If you want no mask
+    # cp $tempDir/$subj_id/$filename $outputDir/$subj_id/$filename
 
 done | tee /dev/tty | tqdm --total `ls -d $inputDir/*/ | wc -l` >/dev/null
 

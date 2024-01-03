@@ -15,7 +15,7 @@ print(df)
 
 # Plot RMSE and standard error using seaborn
 fig, ax = plt.subplots(figsize=(14, 8))
-hue_order = ['s1_2', 's1_3', 'both', 'lut']
+hue_order = ['lut', 's1_2', 's1_3', 'both']
 sns.pointplot(
     data=df,
     x='Label Name',
@@ -76,15 +76,15 @@ for i, point in enumerate(ax.collections):
         method = hue_order[i % 4]
 
         # Choose color based on method
-        if method == 's1_2':
+        if method == 'lut':
             color = 'blue'
-        elif method == 's1_3':
+        elif method == 's1_2':
             color = 'orange'
-        elif method == 'both':
+        elif method == 's1_3':
             color = 'green'
-        elif method == 'lut':
+        elif method == 'both':
             color = 'red'
-    
+
         # Calculate the error value
         rmse_values = df[(df['Tissue Label'] == label) & (df['Method'] == method)]['RMSE']
 
@@ -104,7 +104,7 @@ ax.set_ylabel('Mean RMSE across subjects (s)')
 handles, prev_labels = ax.get_legend_handles_labels()
 ax.legend(
     handles=handles, 
-    labels=['MAP T1 using $S_{1,2}$', 'MAP T1 using $S_{1,3}$', 'MAP T1 using both $S_{1,2}$ and $S_{1,3}$', 'Original point estimate T1'],
+    labels=['Original point estimate T1', 'MAP T1 using $S_{1,2}$', 'MAP T1 using $S_{1,3}$', 'MAP T1 using both $S_{1,2}$ and $S_{1,3}$'],
     )
 plt.tight_layout()
 plt.show()

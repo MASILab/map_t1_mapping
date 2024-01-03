@@ -51,7 +51,7 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     # Get unique items and sort
     times = list(set(times))
     times = sorted(t for t in times)
-    times = [times[0], times[1], times[2]]
+    times = [times[0], times[1]]
 
     # Create MP2RAGE subject
     subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -63,10 +63,15 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_custom', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom', str(subj_id))
+    ev_save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'ev_maps_s1_2_custom', str(subj_id))
+    std_save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_custom', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
+    os.makedirs(ev_save_folder, exist_ok=True)
+    os.makedirs(std_save_folder, exist_ok=True)
+
 #    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)
-    subj.t1_map('likelihood', thresh=0.5).to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
-    # subj.mp2rage[0].to_filename(os.path.join(save_folder, 't1w_s1_2.nii.gz'))
-    # subj.mp2rage[1].to_filename(os.path.join(save_folder, 't1w_s1_3.nii.gz'))
+    # subj.t1_map('likelihood', thresh=0.5).to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
+    subj.t1_ev.to_filename(os.path.join(ev_save_folder, 'ev_map.nii.gz'))
+    subj.t1_std.to_filename(os.path.join(std_save_folder, 'std_map.nii.gz'))

@@ -49,15 +49,15 @@ for subject_id in tqdm(subject_ids):
     # t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject_id, 't1_map.nii.gz')
     # slant = os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject_id, 't1w_seg.nii.gz')
 
-    t1 = os.path.join('/home/saundam1/temp_data/t1_maps_truth', subject_id, 'filtered_t1_map.nii.gz')
-    t1w = os.path.join('/home/saundam1/temp_data/mp2rage_t1w_strip_rigid', subject_id, 't1w.nii.gz')
+    t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject_id, 't1_map.nii.gz')
+    t1w = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom_mask', subject_id, 't1_map.nii.gz')
 
-    # output_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage')
-    # output = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage', subject_id)
-    output_folder = os.path.join('/home/saundam1/temp_data/montage')
-    output = os.path.join(output_folder, subject_id)
+    output_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage')
+    output = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage', subject_id)
+    # output_folder = os.path.join('/home/saundam1/temp_data/montage')
+    # output = os.path.join(output_folder, subject_id)
 
     # Create montage
     os.makedirs(output_folder, exist_ok=True)
-    montage_to_png(t1, output, overlay=t1w, num_slices=3, vmin=0, vmax=5, overlay_alpha=0.5)
+    montage_to_png(t1, output, num_slices=3, vmin=0, vmax=5, overlay=t1w, overlay_alpha=0.5)
 

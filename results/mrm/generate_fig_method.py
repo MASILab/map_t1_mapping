@@ -17,7 +17,7 @@ matplotlib.rcParams['font.size'] = 12
 sns.set_style('ticks')
 sns.set_context('paper')
 save_fig = True
-monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.005.npy'
+monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_custom.npy'
 
 # Display T1 versus S1,2
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -84,13 +84,13 @@ ax.plot(subj.t1[max_ind], subj.m[0], map_est, color='k')
 
 
 # Interpolate posterior along S1,2 instead of M
-s1_2_points = [-0.4, -0.2, 0, 0.2, 0.4]
+s1_2_points = [-0.3, -0.1, 0.1, 0.3]
 X,Y = np.meshgrid(s1_2_points, subj.t1)
 points = np.concatenate((X.ravel()[:,np.newaxis], Y.ravel()[:,np.newaxis]), axis=1)
 posterior_int = RegularGridInterpolator((subj.m[0], subj.t1), posterior, bounds_error=False, fill_value=0)(points)
 posterior_int = posterior_int.reshape(X.shape)
 
-for s_slice in range(5):
+for s_slice in range(4):
     # Plot distribution
     s1_2 = np.full(subj.t1.shape, s1_2_points[s_slice])
     ax.plot(subj.t1, s1_2, posterior_int[:,s_slice], color='b', alpha=0.5)
@@ -102,7 +102,7 @@ for s_slice in range(5):
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')
 ax.set_zlabel('$P(T_1 | S_{1,2})$', labelpad=10)
-ax.view_init(20, -20, 0)
+ax.view_init(20, -60, 0)
 ax.invert_xaxis()
 # ax.set_zlim([0, 0.05])
 
@@ -145,6 +145,7 @@ std_map_slice = load_slice(std_map, view=2)
 ev_map_slice = load_slice(ev_map, view=2)
 
 gre1_slice_sag = load_slice(gre1_real, view=0)
+gre2_slice_sag = load_slice(gre2_real, view=0)
 
 # Plot slices and save
 fig, ax = plt.subplots(figsize=(1.5, 1.5))
@@ -202,5 +203,13 @@ ax.set_axis_off()
 fig.tight_layout()
 if save_fig:
     fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_gre1_sag.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
+fig, ax = plt.subplots(figsize=(1.5, 1.5))
+ax.imshow(gre2_slice_sag, cmap='gray')
+ax.set_axis_off()
+fig.tight_layout()
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/method_gre2_sag.pdf', dpi=1200, bbox_inches='tight', transparent=True)
+
 
 plt.show()

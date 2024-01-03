@@ -61,7 +61,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_custom.npy'), 
     all_inv_combos=False,
 )
 
@@ -111,7 +111,7 @@ m2 = subj_data['S1_3'].values
 fig = plt.figure(figsize=(3.25, 4), layout='constrained')
 ax = fig.add_subplot(projection='3d')
 # ax.plot(m1, m2, subj.t1, color='b')
-ax.plot_surface(X, Y, t1_lut, cmap='viridis', edgecolor='none', alpha=0.5)
+ax.plot_surface(X, Y, t1_lut, cmap='viridis', edgecolor='none', alpha=1)
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$S_{1,3}$')
 ax.set_zlabel('$T_1$ (s)')
@@ -124,7 +124,7 @@ ax.legend()
 ax.set_title('Multiple MP2RAGE signals')
 
 # Add dashed lines and point 
-pt = np.array([-0.15, -0.2])[:,np.newaxis]
+pt = np.array([-0.35, -0.3])[:,np.newaxis]
 nodes = np.array([t1w1.flatten()[indx], t1w2.flatten()[indx]])
 print(pt.shape, nodes.shape)
 closest_ind = cdist(pt.T, nodes.T).argmin()
@@ -151,7 +151,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.005.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_custom.npy'), 
     all_inv_combos=False,
 )
 
@@ -175,7 +175,7 @@ ax.plot(subj.t1[max_ind], subj.m[0], map_est, color='k')
 # ax.plot(subj.t1, t1_mapping.utils.mp2rage_t1w(GRE[0,:], GRE[1,:]), 0, color='k')ne', alpha=0.25)
 
 # Plot probability density functions at certain points along S1_2
-s1_2_points = [-0.45, -0.15, 0.15, 0.45]
+s1_2_points = [-0.3, -0.1, 0.1, 0.3]
 
 
 X,Y = np.meshgrid(s1_2_points, subj.t1)
@@ -192,7 +192,7 @@ for s_slice in range(len(s1_2_points)):
     t1_mode = subj.t1[np.argmax(posterior_int[:,s_slice])]
     ax.plot([t1_mode, t1_mode], [s1_2_points[s_slice], s1_2_points[s_slice]], [0, np.max(posterior_int[:,s_slice])], color='b', linestyle='dashed')
     
-    if s1_2_points[s_slice] == -0.15:
+    if s1_2_points[s_slice] == -0.3:
         ax.plot(t1_mode, s1_2_points[s_slice], np.max(posterior_int[:,s_slice]), 'b.', markersize=10)
         ylims = ax.get_ylim()
         ax.plot([t1_mode, t1_mode], [s1_2_points[s_slice], ylims[0]], [0, 0], color=[0,0,1], linestyle='dashed')
@@ -203,7 +203,7 @@ for s_slice in range(len(s1_2_points)):
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')
 ax.set_zlabel('$P(T_1 | S_{1,2})$')
-ax.view_init(20, -20, 0)
+ax.view_init(20, -60, 0)
 ax.invert_xaxis()
 # ax.set_zlim([0, 0.05])
 ax.set_title('Posterior distribution $P(T_1 | S_{1,2})$')

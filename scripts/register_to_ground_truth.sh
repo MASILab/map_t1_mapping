@@ -1,12 +1,12 @@
 # Register the ground truth T1 maps to the generated T1 maps
-# dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
-# outputDir="$dataDir/t1w_strip_rigid"
-# movingDir="$dataDir/t1w_strip"
-# fixedDir="$dataDir/t1_maps_truth_mask"
-dataDir="/home/saundam1/temp_data"
-outputDir="$dataDir/mp2rage_t1w_strip_rigid"
-movingDir="$dataDir/mp2rage_t1w_strip"
+dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
+outputDir="$dataDir/robust_t1w_0.25_synthstrip_reg"
+movingDir="$dataDir/robust_t1w_0.25_synthstrip"
 fixedDir="$dataDir/t1_maps_truth"
+# dataDir="/home/saundam1/temp_data"
+# outputDir="$dataDir/mp2rage_t1w_strip_rigid"
+# movingDir="$dataDir/mp2rage_t1w_strip"
+# fixedDir="$dataDir/t1_maps_truth"
 
 #for subj_path in "$fixedDir"/*/; do
 for subj_path in $movingDir/*; do # $movingDir/*; do

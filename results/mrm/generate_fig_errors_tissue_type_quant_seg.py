@@ -13,7 +13,7 @@ import seaborn as sns
 df = pd.DataFrame(columns=['Subject', 'Region', 'Method', 'RMSE'])
 
 # Loop through subjects and get error in WM, GM and other
-for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask')):
+for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask')):
     # print(subject) 
 
     # # Load SLANT segmentation
@@ -52,20 +52,20 @@ for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp
 
 
     # Load SLANT segmentation
-    slant_wm = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_mask', subject, 't1w_seg_wm.nii.gz'))
-    slant_gm = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_mask', subject, 't1w_seg_gm.nii.gz'))
-    slant_other = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_mask', subject, 't1w_seg_other.nii.gz'))
+    slant_wm = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_wm.nii.gz'))
+    slant_gm = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_gm.nii.gz'))
+    slant_other = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_other.nii.gz'))
 
     wm_mask = slant_wm.get_fdata() > 0
     gm_mask = slant_gm.get_fdata() > 0
     other_mask = slant_other.get_fdata() > 0
 
     # Load niftis
-    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
-    map_s1_2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject, f't1_map.nii.gz'))
-    map_s1_3 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_3_mask', subject, f't1_map.nii.gz'))
-    map_both = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_all_mask', subject, f't1_map.nii.gz'))
-    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
+    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
+    map_s1_2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_custom_mask', subject, f't1_map.nii.gz'))
+    map_s1_3 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_3_custom_mask', subject, f't1_map.nii.gz'))
+    map_both = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom_mask', subject, f't1_map.nii.gz'))
+    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
 
     for method, map in zip(['s1_2', 's1_3', 'both', 'lut'], [map_s1_2, map_s1_3, map_both, lut]):
         # Get error in WM, GM and other

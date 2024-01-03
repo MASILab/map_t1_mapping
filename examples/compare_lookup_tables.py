@@ -18,7 +18,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
 y = subj.t1
 x = subj.m[0] 
 X,Y = np.meshgrid(x,y, indexing='ij')
-Z = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'))
+Z = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_custom.npy'))
 
 # Calculate posterior distribution
 # Z = Z / np.sum(Z * np.prod(subj.delta_m), axis=-1)
@@ -53,7 +53,7 @@ print(max_vals, max_inds)
 plt.plot(x_coords, y_coords, 'r.-')
 
 # Plot counts for a couple values of m
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_1M_s1_2_custom.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_custom.npy'))
 t1 = subj.t1
 m = subj.m
 fig, ax = plt.subplots()
@@ -98,7 +98,7 @@ plt.figure(figsize=(8, 6))
 prob[prob == 0] = 1e-8
 # pcm = plt.pcolormesh(X, Y, Z, cmap='viridis')
 pcm = plt.pcolormesh(X,Y,prob, cmap='viridis', norm='log')
-plt.colorbar(pcm, label='P(T1 | S_1,2) (log scale)')
+plt.colorbar(pcm, label='$P(T_1 | S_{1,2})$ (log scale)')
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$T_1$ (s)')
 print(max_vals, max_inds)
@@ -131,11 +131,11 @@ plt.ylabel('$T_1$ (s)')
 
 
 # Plot maximum counts
-prob2 = counts / np.sum(counts*subj.delta_t1, axis=-1)
-max_inds = np.argmax(prob2, axis=-1)
-x_coords = subj.m[0]
-y_coords = subj.t1[max_inds]
-plt.plot(x_coords, y_coords, 'r.-', label='Without broadcasting')
+# prob2 = counts / np.sum(counts*subj.delta_t1, axis=-1)
+# max_inds = np.argmax(prob2, axis=-1)
+# x_coords = subj.m[0]
+# y_coords = subj.t1[max_inds]
+# plt.plot(x_coords, y_coords, 'r.-', label='Without broadcasting')
 
 plt.legend()
 plt.show()
