@@ -14,7 +14,7 @@ delta_m = (0.5 - (-0.5))/(num_points-1)
 
 # Load Monte Carlo simulation
 X,Y = np.meshgrid(m, t1)
-counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2.npy'))
+counts = np.load(os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_3_0.0006.npy'))
 counts_nonzero = np.where(counts == 0, 1, counts)
 
 # Create histogram 

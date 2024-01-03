@@ -11,8 +11,8 @@ with open(csv_path, 'r') as csv_file:
         subject_ids.add(row['Subject'])
 
 # Copy over robust T1 
-slant_path = '/home/saundam1/temp_data/slant_mp2rage_nss'
-t1w_path = '/nfs/masi/saundam1/outputs/t1_mapping/robust_t1w'
+slant_path = '/home/saundam1/temp_data/slant_mp2rage_nss_0.25'
+t1w_path = '/nfs/masi/saundam1/outputs/t1_mapping/robust_t1w_0.25'
 for subj_id in subject_ids:
     print(subj_id)
     file_path = os.path.join(t1w_path, str(subj_id), 'robust_t1w.nii.gz')

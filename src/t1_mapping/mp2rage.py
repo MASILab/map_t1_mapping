@@ -125,6 +125,9 @@ class MP2RAGESubject():
             "TR": self.inv_json[0]["RepetitionTime"],
             "flip_angles": [i['FlipAngle'] for i in self.inv_json],
             "inversion_times": [i['TriggerDelayTime']/1000 for i in self.inv_json],
+            # "TR": 0.006,
+            # "flip_angles": [4.0, 4.0],
+            # "inversion_times": [1010/1000, 3310/1000],
             "n": [225],
             "eff": 0.84,
         }
@@ -139,8 +142,8 @@ class MP2RAGESubject():
         t1w_array = t1_mapping.utils.mp2rage_t1w(self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64))
         return nib.nifti1.Nifti1Image(t1w_array, self.affine)
     
-    def t1_map(self, method):
-        if method == 'linear':
+    def t1_map(self, method, thresh=0.5):
+        if method == 'linear' or 'lut':
             t1_map = t1_mapping.utils.mp2rage_t1_map(
                 t1=self.t1, 
                 delta_t1=self.delta_t1,
@@ -162,7 +165,7 @@ class MP2RAGESubject():
                 method='likelihood',
                 monte_carlo=self.monte_carlo,
                 pairs=self.pairs,
-                likelihood_thresh=0.5
+                likelihood_thresh=thresh
             )
         elif method == 'map':
             t1_map = t1_mapping.utils.mp2rage_t1_map(
@@ -176,7 +179,7 @@ class MP2RAGESubject():
                 method='map',
                 monte_carlo=self.monte_carlo,
                 pairs=self.pairs,
-                likelihood_thresh=0.5
+                likelihood_thresh=thresh
             )
         return nib.nifti1.Nifti1Image(t1_map, self.affine)
 

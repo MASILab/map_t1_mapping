@@ -33,22 +33,31 @@ for i in range(max_val):
 slant_cmap = matplotlib.colors.ListedColormap(colors_list, name='slant')
 
 # Get a list of all folders under t1_mapping.definitions.GROUND_TRUTH_DATA
-subject_ids = os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask'))
+# subject_ids = os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask'))
+subject_ids_truth = os.listdir('/home/saundam1/temp_data/t1_maps_truth')
+subject_ids_t1w = os.listdir('/home/saundam1/temp_data/mp2rage_t1w_strip_rigid')
+
+subject_ids = list(set(subject_ids_truth) & set(subject_ids_t1w))
 
 # Run calculate_rmse() for each folder
-ground_truth_df = pd.read_csv('/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/ground_truth_subjects.csv', dtype={'Subject': str})
+# ground_truth_df = pd.read_csv('/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/ground_truth_subjects.csv', dtype={'Subject': str})
 
 print(subject_ids)
 for subject_id in tqdm(subject_ids):
-    if subject_id not in ground_truth_df['Subject'].values:
-        continue
-    t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject_id, 't1_map.nii.gz')
-    slant = os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject_id, 't1w_seg.nii.gz')
+    # if subject_id not in ground_truth_df['Subject'].values:
+    #     continue
+    # t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject_id, 't1_map.nii.gz')
+    # slant = os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject_id, 't1w_seg.nii.gz')
+
+    t1 = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject_id, 't1_map.nii.gz')
+    t1w = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom_mask', subject_id, 't1_map.nii.gz')
 
     output_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage')
     output = os.path.join(t1_mapping.definitions.OUTPUTS, 'montage', subject_id)
+    # output_folder = os.path.join('/home/saundam1/temp_data/montage')
+    # output = os.path.join(output_folder, subject_id)
 
     # Create montage
     os.makedirs(output_folder, exist_ok=True)
-    montage_to_png(t1, output, overlay=slant, num_slices=3, vmin=0, vmax=5, overlay_vmin=0, overlay_vmax=209, overlay_alpha=0.25, overlay_cmap=slant_cmap)
+    montage_to_png(t1, output, num_slices=3, vmin=0, vmax=5, overlay=t1w, overlay_alpha=0.5)
 

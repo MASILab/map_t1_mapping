@@ -1,5 +1,5 @@
 # Register the ground truth T1 maps to the generated T1 maps
-dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
+dataDir="/home/saundam1/"
 regDir="$dataDir/t1w_strip_rigid"
 maskDir="$dataDir/ground_truth_masks"
 

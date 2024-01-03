@@ -4,10 +4,10 @@ import numpy as np
 import os
 
 # Load SLANT 
-for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask')):
+for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask')):
     print(subject)
 
-    slant = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject, 't1w_seg.nii.gz'))
+    slant = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask', subject, 't1w_seg.nii.gz'))
 
     # Segment into WM, GM and TICV/posterior fossa
     slant_data = slant.get_fdata()
@@ -28,6 +28,6 @@ for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp
     gm = nib.Nifti1Image(gm_data, slant.affine)
     other = nib.Nifti1Image(other_data, slant.affine)
 
-    wm.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject, 't1w_seg_wm.nii.gz'))
-    gm.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject, 't1w_seg_gm.nii.gz'))
-    other.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_mask', subject, 't1w_seg_other.nii.gz'))
+    wm.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_wm.nii.gz'))
+    gm.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_gm.nii.gz'))
+    other.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_other.nii.gz'))
