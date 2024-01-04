@@ -15,6 +15,8 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     all_inv_combos=False
 )
 
+# Corpus callosum
+slice = 102
 points = [
     [170, 251],
     [186, 260],
@@ -22,26 +24,56 @@ points = [
     [188, 230],
     [172, 238]
 ]
+
+# Larger section
+# points = [
+#     [107, 335],
+#     [357, 342],
+#     [293, 211],
+#     [81, 169]
+# ]
+# slice = 94
+
 points = np.array(points)
 roi = np.zeros(subj.mp2rage[0].shape)
 roi2d = polygon2mask(roi.shape[1:], points)
-roi[102, :, :] = roi2d
+roi[slice, :, :] = roi2d
 roi_nifti = nib.nifti1.Nifti1Image(roi, subj.mp2rage[0].affine)
 roi_nifti.to_filename(os.path.join(t1_mapping.definitions.OUTPUTS, 'robust_t1w_0.25', '334264', 'cc_mask.nii.gz'))
 
-# Load ROI
-roi = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'robust_t1w_0.25', '334264', 'cc_mask.nii.gz')).get_fdata()
-fig, ax = plot_nifti(subj.mp2rage[0], slice=[102, 256, 256], mask=roi, mask_alpha=0.5)
+# # Load ROI
+# roi = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'robust_t1w_0.25', '334264', 'cc_mask.nii.gz')).get_fdata()
+
+# Load entire brain mask
+# roi = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25', '334264', 't1w_seg_wm.nii.gz')).get_fdata()
+# roi = roi > 0
+# roi = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'robust_t1w_0.25_synthstrip', '334264', 'mask.nii.gz')).get_fdata()
+slice = 102
+
+# Plot ROI
+fig, ax = plot_nifti(subj.mp2rage[0], slice=[slice, 256, 256], mask=roi, mask_alpha=0.5)
 
 # Get data from NIFTI
 roi_mean_real = []
 roi_range_real = []
 roi_std_real = []
 all_range_real = []
+
 roi_mean_imag = []
 roi_range_imag = []
 roi_std_imag = []
 all_range_imag = []
+
+roi_mean_mag = []
+roi_range_mag = []
+roi_std_mag = []
+all_range_mag = []
+
+roi_mean_ang = []
+roi_range_ang = []
+roi_std_ang = []
+all_range_ang = []
+
 for i, inv in enumerate(subj.inv):
     inv_data_real = np.real(inv.get_fdata(dtype=np.complex64))
     roi_data_real = inv_data_real[roi.astype(bool)]
@@ -60,10 +92,29 @@ for i, inv in enumerate(subj.inv):
     roi_std_imag.append(np.std(roi_data_imag))
     all_range_imag.append((np.min(inv_data_imag), np.max(inv_data_imag)))
 
+    # Now do for magnitude
+    inv_data_mag = np.abs(inv.get_fdata(dtype=np.complex64))
+    roi_data_mag = inv_data_mag[roi.astype(bool)]
+
+    roi_mean_mag.append(np.mean(roi_data_mag))
+    roi_range_mag.append((np.min(roi_data_mag), np.max(roi_data_mag)))
+    roi_std_mag.append(np.std(roi_data_mag))
+    all_range_mag.append((np.min(inv_data_mag), np.max(inv_data_mag)))
+
+    # Now do for angle
+    inv_data_ang = np.angle(inv.get_fdata(dtype=np.complex64))
+    roi_data_ang = inv_data_ang[roi.astype(bool)]
+
+    roi_mean_ang.append(np.mean(roi_data_ang))
+    roi_range_ang.append((np.min(roi_data_ang), np.max(roi_data_ang)))
+    roi_std_ang.append(np.std(roi_data_ang))
+    all_range_ang.append((np.min(inv_data_ang), np.max(inv_data_ang)))
     
 # Calculate SNR
 roi_cnr_real = [(r[1]-r[0])/s for r,s in zip(all_range_real, roi_std_real)]
 roi_cnr_imag = [(r[1]-r[0])/s for r,s in zip(all_range_imag, roi_std_imag)]
+roi_cnr_mag = [(r[1]-r[0])/s for r,s in zip(all_range_mag, roi_std_mag)]
+roi_cnr_ang = [(r[1]-r[0])/s for r,s in zip(all_range_ang, roi_std_ang)]
 
 # Measurements from ROI
 # roi_mean = [31789, 89513, 89813]
@@ -87,7 +138,12 @@ GRE_range = [(np.min(GRE[i,:]), np.max(GRE[i,:])) for i in range(3)]
 
 desired_std_real = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr_real)]
 desired_std_imag = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr_imag)]
+desired_std_mag = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr_mag)]
+desired_std_ang = [(r[1]-r[0])/cnr for r,cnr in zip(GRE_range, roi_cnr_ang)]
+
 print(f'Real: {desired_std_real}')
 print(f'Imag: {desired_std_imag}')
+print(f'Mag: {desired_std_mag}')
+print(f'Ang: {desired_std_ang}')
 
 plt.show()

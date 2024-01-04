@@ -11,11 +11,11 @@ from statannotations.Annotator import Annotator
 
 def calculate_rmse(subject_id):
     # Load subject
-    likelihood = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_all_mask', subject_id, 't1_map.nii.gz'))
-    likelihood_s1_2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_2_mask', subject_id, 't1_map.nii.gz'))
-    likelihood_s1_3 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_likelihood_s1_3_mask', subject_id, 't1_map.nii.gz'))
-    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_lut_mask', subject_id, 't1_map.nii.gz'))
-    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 't1_maps_truth_mask', subject_id, 't1_map.nii.gz'))
+    likelihood = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom_mask', subject_id, 't1_map.nii.gz'))
+    likelihood_s1_2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_custom_mask', subject_id, 't1_map.nii.gz'))
+    likelihood_s1_3 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_3_custom_mask', subject_id, 't1_map.nii.gz'))
+    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject_id, 't1_map.nii.gz'))
+    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject_id, 't1_map.nii.gz'))
 
     # Get data
     likelihood_data = likelihood.get_fdata()
@@ -33,21 +33,19 @@ def calculate_rmse(subject_id):
     return rmse_both, rmse_s1_2, rmse_s1_3, rmse_lut
 
 # Get a list of all folders under t1_mapping.definitions.GROUND_TRUTH_DATA
-subject_ids = os.listdir(t1_mapping.definitions.GROUND_TRUTH_DATA)
+# subject_ids = os.listdir(t1_mapping.definitions.GROUND_TRUTH_DATA)
 
 # Run calculate_rmse() for each folder
-ground_truth_df = pd.read_csv('/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/ground_truth_subjects.csv', dtype={'Subject': str})
+# ground_truth_df = pd.read_csv('/nfs/masi/saundam1/datasets/MP2RAGE_SIR_qMT/ground_truth_subjects.csv', dtype={'Subject': str})
+df = pd.read_csv('/nfs/masi/saundam1/outputs/t1_mapping/ground_truth_subjects.csv')
 
 rmse_both_list = []
 rmse_s1_2_list = []
 rmse_s1_3_list = []
 rmse_lut_list = []
 subjects = []
-for subject_id in subject_ids:
-    if subject_id not in ground_truth_df['Subject'].values:
-        continue
-    elif subject_id in ['336547', '336530', '336699', '336388']:
-        continue
+for subject in df['Subject'].values:
+    subject_id = str(subject)
     rmse_both, rmse_s1_2, rmse_s1_3, rmse_lut = calculate_rmse(subject_id)
     rmse_both_list.append(rmse_both)
     rmse_s1_2_list.append(rmse_s1_2)
@@ -66,7 +64,7 @@ print(f'RMSE S1_3: {np.mean(rmse_s1_3_array):.4f} +/- {np.std(rmse_s1_3_array):.
 print(f'RMSE LUT: {np.mean(rmse_lut_array):.4f} +/- {np.std(rmse_lut_array):.4f}')
 
 # Perform Wilcoxon signed-rank test
-zero_method = 'pratt'
+zero_method = 'zsplit'
 stat, p1 = wilcoxon(rmse_both_array, rmse_lut_array, zero_method=zero_method)
 print(f'Wilcoxon signed-rank test between both and LUT: {p1=}')
 

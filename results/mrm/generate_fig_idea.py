@@ -61,7 +61,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310', '5610'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_custom.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.005.npy'), 
     all_inv_combos=False,
 )
 
@@ -111,7 +111,7 @@ m2 = subj_data['S1_3'].values
 fig = plt.figure(figsize=(3.25, 4), layout='constrained')
 ax = fig.add_subplot(projection='3d')
 # ax.plot(m1, m2, subj.t1, color='b')
-ax.plot_surface(X, Y, t1_lut, cmap='viridis', edgecolor='none', alpha=1)
+ax.plot_surface(X, Y, t1_lut, cmap='viridis', edgecolor='none', alpha=0.75)
 ax.set_xlabel('$S_{1,2}$')
 ax.set_ylabel('$S_{1,3}$')
 ax.set_zlabel('$T_1$ (s)')
@@ -151,7 +151,7 @@ subj = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
-    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_custom.npy'), 
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.005.npy'), 
     all_inv_combos=False,
 )
 
@@ -203,7 +203,7 @@ for s_slice in range(len(s1_2_points)):
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')
 ax.set_zlabel('$P(T_1 | S_{1,2})$')
-ax.view_init(20, -60, 0)
+ax.view_init(20, -25, 0)
 ax.invert_xaxis()
 # ax.set_zlim([0, 0.05])
 ax.set_title('Posterior distribution $P(T_1 | S_{1,2})$')

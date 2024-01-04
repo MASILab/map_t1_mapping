@@ -3,15 +3,15 @@ dataDir="/nfs/masi/saundam1/outputs/t1_mapping"
 regDir="$dataDir/robust_t1w_0.25_synthstrip_reg"
 maskDir="$dataDir/ground_truth_masks"
 
-inputDir="$dataDir/results/t1_maps_likelihood_s1_3_0.005"
+inputDir="$dataDir/results/std_maps_s1_2_0.005"
 outputDir="${inputDir}_mask"
 
 tempDir="/nfs/masi/saundam1/temp"
 
-filename="t1_map.nii.gz"
-#for subj_path in "$inputDir"/*/; do
-for subj_path in "$inputDir"/*/; do
-    subj_id=`basename $subj_path`
+filename="std_map.nii.gz"
+
+task() {
+    subj_id=`basename $1`
     echo $subj_id
 
     # Make appropriate folders
@@ -25,8 +25,14 @@ for subj_path in "$inputDir"/*/; do
 
     # If you want no mask
     # cp $tempDir/$subj_id/$filename $outputDir/$subj_id/$filename
+}
 
+#for subj_path in "$inputDir"/*/; do
+for subj_path in "$inputDir"/*/; do
+    task "$subj_path" &
 done | tee /dev/tty | tqdm --total `ls -d $inputDir/*/ | wc -l` >/dev/null
+
+wait
 
 # Delete empty folders in output
 rm -r $tempDir

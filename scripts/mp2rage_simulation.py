@@ -29,6 +29,9 @@ def accumulate_sums(iteration_range, m_ranges):
         else:
             for i in range(len(real_sd)):
                 GRE_noisy[i,:] = GRE[i, :] + s.normal(scale=real_sd[i], size=GRE[i,:].shape) + 1j * s.normal(scale=imag_sd[i], size=GRE[i,:].shape)
+                # mag_part = s.normal(scale=real_sd[i], size=GRE[i,:].shape)
+                # ang_part = s.normal(scale=imag_sd[i], size=GRE[i,:].shape)
+                # GRE_noisy[i,:] = GRE[i, :] + mag_part * np.cos(ang_part) + 1j * mag_part * np.sin(ang_part)
         mp2rage_noisy = [mp2rage_t1w(GRE_noisy[i[0], :], GRE_noisy[i[1], :]) for i in subj.pairs]
 
         for c in zip(*mp2rage_noisy, subj.t1):
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     ranges = [(i, i + iter_per_process) for i in range(0, num_trials, iter_per_process)]
     counts = np.zeros(shape)
     with Pool(processes=num_processes) as p:
-        for x in tqdm(p.imap(iterable_func, ranges), total=num_processes):
+        for x in tqdm(p.imap_unordered(iterable_func, ranges), total=num_processes):
             counts += x
     
     # Save PDFs to file for later use

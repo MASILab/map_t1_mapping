@@ -143,7 +143,7 @@ class MP2RAGESubject():
         return nib.nifti1.Nifti1Image(t1w_array, self.affine)
     
     def t1_map(self, method, thresh=0.5):
-        if method == 'linear' or 'lut':
+        if method == 'linear' or method == 'lut':
             t1_map = t1_mapping.utils.mp2rage_t1_map(
                 t1=self.t1, 
                 delta_t1=self.delta_t1,

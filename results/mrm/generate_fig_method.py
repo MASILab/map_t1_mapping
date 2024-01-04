@@ -17,7 +17,7 @@ matplotlib.rcParams['font.size'] = 12
 sns.set_style('ticks')
 sns.set_context('paper')
 save_fig = True
-monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_custom.npy'
+monte_carlo = '/nfs/masi/saundam1/outputs/t1_mapping/distr/counts_100M_s1_2_0.005.npy'
 
 # Display T1 versus S1,2
 subj = t1_mapping.mp2rage.MP2RAGESubject(
@@ -102,7 +102,7 @@ for s_slice in range(4):
 ax.set_xlabel('$T_1$ (s)')
 ax.set_ylabel('$S_{1,2}$')
 ax.set_zlabel('$P(T_1 | S_{1,2})$', labelpad=10)
-ax.view_init(20, -60, 0)
+ax.view_init(20, -20, 0)
 ax.invert_xaxis()
 # ax.set_zlim([0, 0.05])
 

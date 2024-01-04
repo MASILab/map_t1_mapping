@@ -26,9 +26,9 @@ for i, subject in enumerate(['334264', '335749', '336954']):
     # Load niftis
     truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
     lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
-    map_both = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom_mask', subject, f't1_map.nii.gz'))
-    map1 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_custom_mask', subject, f't1_map.nii.gz'))
-    map2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_3_custom_mask', subject, f't1_map.nii.gz'))
+    map_both = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_0.005_mask', subject, f't1_map.nii.gz'))
+    map1 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_0.005_mask', subject, f't1_map.nii.gz'))
+    map2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_3_0.005_mask', subject, f't1_map.nii.gz'))
     
     # Error NIFTIs
     lut_error = nib.Nifti1Image(truth.get_fdata() - lut.get_fdata(), truth.affine)
@@ -56,9 +56,11 @@ for i, subject in enumerate(['334264', '335749', '336954']):
     axes[i,2].imshow(map2_slice, 'RdBu', norm=norm) 
     axes[i,3].imshow(map_both_slice, 'RdBu', norm=norm)
 
+    xlims = [[48, 207], [48, 207], [48, 207]]
+    ylims = [[43, 225], [43, 235], [25, 235]]
     for j in range(4):
-        axes[i,j].set_xlim([48, 207])
-        axes[i,j].set_ylim([25, 235])
+        axes[i,j].set_xlim(xlims[i])
+        axes[i,j].set_ylim(ylims[i])
         axes[i,j].set_xticks([])
         axes[i,j].set_yticks([])
         axes[i,j].set_frame_on(False)
@@ -116,9 +118,11 @@ for i, subject in enumerate(['334264', '335749', '336954']):
     axes2[i,2].imshow(map_slice_other, 'RdBu', norm=norm)
     axes2[i,3].imshow(map_slice, 'RdBu', norm=norm)
 
+    xlims = [[48, 207], [48, 207], [48, 207]]
+    ylims = [[43, 225], [43, 235], [25, 235]]
     for j in range(4):
-        axes2[i,j].set_xlim([48, 207])
-        axes2[i,j].set_ylim([25, 235])
+        axes2[i,j].set_xlim(xlims[i])
+        axes2[i,j].set_ylim(ylims[i])
         axes2[i,j].set_xticks([])
         axes2[i,j].set_yticks([])
         axes2[i,j].set_frame_on(False)
@@ -138,8 +142,8 @@ cbar2.ax.set_xlabel('s')
 cbar2.ax.set_ylabel('Error (ground truth - experimental value,\nsymmetric log scale)')
 
 if save_fig:
-    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_results.pdf', dpi=1200)
-    fig2.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_seg.pdf', dpi=1200)
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_errors.pdf', dpi=1200)
+    fig2.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_errors_seg.pdf', dpi=1200)
 
 plt.show()
 

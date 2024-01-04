@@ -4,16 +4,22 @@ import t1_mapping
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 from adam_utils.nifti import load_slice
 
-fig, axes = plt.subplots(3,5, figsize=(6.5, 3))
+matplotlib.rcParams['grid.linewidth'] = 1
+matplotlib.rcParams['axes.linewidth'] = 1
+matplotlib.rcParams['font.size'] = 12
+save_fig = False
+
+fig, axes = plt.subplots(3,5, figsize=(6, 3.75))
 for i, subject in enumerate(['334264', '335749', '336954']):
     # Load niftis
     truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
     lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
-    map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_mask', subject, f't1_map.nii.gz'))
-    ev = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'ev_maps_s1_2_mask', subject, f'ev_map.nii.gz'))
-    std = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_mask', subject, f'std_map.nii.gz'))
+    map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_0.005_mask', subject, f't1_map.nii.gz'))
+    ev = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'ev_maps_s1_2_0.005_mask', subject, f'ev_map.nii.gz'))
+    std = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_0.005_mask', subject, f'std_map.nii.gz'))
 
     # Load slices
     truth_slice = load_slice(truth, view=2)
@@ -35,6 +41,15 @@ for i, subject in enumerate(['334264', '335749', '336954']):
     axes[i,3].set_axis_off()
     axes[i,4].set_axis_off()
 
+    xlims = [[48, 207], [48, 207], [48, 207]]
+    ylims = [[43, 225], [43, 235], [25, 235]]
+    for j in range(5):
+        axes[i,j].set_xlim(xlims[i])
+        axes[i,j].set_ylim(ylims[i])
+        axes[i,j].set_xticks([])
+        axes[i,j].set_yticks([])
+        axes[i,j].set_frame_on(False)
+
 # Add colorbars
 cbar1 = fig.colorbar(t, ax=axes[:,0:4])
 cbar1.ax.set_xlabel('s')
@@ -43,4 +58,5 @@ cbar2.ax.set_xlabel('s')
 
 plt.show()
 
-fig.savefig('/home/saundam1/VM/shared_folder/mp2rage/MRM_figures/qualitative_results.png', dpi=600)
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_results.pdf', dpi=1200)

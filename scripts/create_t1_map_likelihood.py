@@ -58,20 +58,20 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
         subject_id=subject,
         scan=chosen_scan,
         scan_times=times,
-        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_custom.npy'), 
+        monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_s1_2_0.005.npy'), 
         all_inv_combos=False,
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_custom', str(subj_id))
-    ev_save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'ev_maps_s1_2_custom', str(subj_id))
-    std_save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_custom', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_0.005', str(subj_id))
+    # ev_save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'ev_maps_s1_2_custom', str(subj_id))
+    # std_save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_custom', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
-    os.makedirs(ev_save_folder, exist_ok=True)
-    os.makedirs(std_save_folder, exist_ok=True)
+    # os.makedirs(ev_save_folder, exist_ok=True)
+    # os.makedirs(std_save_folder, exist_ok=True)
 
 #    std_map = nib.Nifti1Image(np.sqrt(subj.t1_var.dataobj), subj.affine)
-    # subj.t1_map('likelihood', thresh=0.5).to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
-    subj.t1_ev.to_filename(os.path.join(ev_save_folder, 'ev_map.nii.gz'))
-    subj.t1_std.to_filename(os.path.join(std_save_folder, 'std_map.nii.gz'))
+    subj.t1_map(method='likelihood', thresh=0.5).to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
+    # subj.t1_ev.to_filename(os.path.join(ev_save_folder, 'ev_map.nii.gz'))
+    # subj.t1_std.to_filename(os.path.join(std_save_folder, 'std_map.nii.gz'))

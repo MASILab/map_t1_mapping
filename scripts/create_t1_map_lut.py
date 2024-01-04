@@ -11,7 +11,7 @@ import re
 groups = pd.read_csv(os.path.join(t1_mapping.definitions.OUTPUTS, 'ground_truth_subjects.csv'))
 
 # Loop through subjects
-for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
+for subject in ['334264']: #tqdm(os.listdir(t1_mapping.definitions.DATA)):
     subj_id = int(subject)
     if subj_id not in groups['Subject'].to_numpy():
         continue
@@ -46,8 +46,8 @@ for subject in tqdm(os.listdir(t1_mapping.definitions.DATA)):
     )
 
     # Calculate T1 map and save
-    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results',  't1_maps_lut', str(subj_id))
+    save_folder = os.path.join(t1_mapping.definitions.OUTPUTS, 'results',  'test', str(subj_id))
 
     os.makedirs(save_folder, exist_ok=True)
     t1_map = subj.t1_map('linear')
-    t1_map.to_filename(os.path.join(save_folder, 't1_map.nii.gz'))
+    t1_map.to_filename(os.path.join(save_folder, 't1_map_lut.nii.gz'))
