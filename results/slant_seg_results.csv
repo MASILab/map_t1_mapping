@@ -1,4 +1,4 @@
-Subject,Region,Method,Tissue Label,RMSE
+Subject,Tissue Label,Method,Tissue Type,RMSE
 335852,0.0,s1_2,Other,0.2220360733064242
 335852,0.0,s1_3,Other,0.3172470119362282
 335852,0.0,both,Other,0.2907161964059888

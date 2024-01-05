@@ -10,7 +10,7 @@ from adam_utils.nifti import load_slice
 import seaborn as sns
 
 # Create RMSE dataframe
-df = pd.DataFrame(columns=['Subject', 'Region', 'Method', 'Tissue Label', 'RMSE'])
+df = pd.DataFrame(columns=['Subject', 'Tissue Label', 'Method', 'Tissue Type', 'RMSE'])
 
 # Loop through subjects and get error in WM, GM and other
 for subject in os.listdir(os.path.join(t1_mapping.definitions.OUTPUTS, 'slant_mp2rage_nss_0.25_mask')):
