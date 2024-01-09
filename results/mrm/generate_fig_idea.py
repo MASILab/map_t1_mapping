@@ -211,4 +211,29 @@ ax.set_title('Posterior distribution $P(T_1 | S_{1,2})$')
 if save_fig:
     fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/idea_2.pdf', dpi=1200, bbox_inches='tight')
 
+# Get S1,2 and S1,3
+subj = t1_mapping.mp2rage.MP2RAGESubject(
+    subject_id='334264',
+    scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
+    scan_times=['1010', '3310', '5610'],
+    monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_all_0.005.npy'), 
+    all_inv_combos=False,
+)
+
+fig, ax = plt.subplots(figsize=(2,1.5), layout='constrained')
+s1_2_slice = load_slice(subj.mp2rage[0], view=2)
+ax.imshow(s1_2_slice, 'gray', vmin=-0.5, vmax=0.5)
+ax.set_axis_off()
+
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/idea_s1_2.pdf', dpi=1200, bbox_inches='tight')
+
+fig, ax = plt.subplots(figsize=(2,1.5), layout='constrained')
+s1_3_slice = load_slice(subj.mp2rage[1], view=2)
+ax.imshow(s1_3_slice, 'gray', vmin=-0.5, vmax=0.5)
+ax.set_axis_off()
+
+if save_fig:
+    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/idea_s1_3.pdf', dpi=1200, bbox_inches='tight')
+
 plt.show()

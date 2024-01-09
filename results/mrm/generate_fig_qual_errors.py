@@ -15,78 +15,91 @@ matplotlib.rcParams['axes.linewidth'] = 1
 matplotlib.rcParams['font.size'] = 12
 save_fig = True
 
-# Plot errors with segmentations
-fig, axes = plt.subplots(3,4, figsize=(6, 4.5))
-for i, subject in enumerate(['334264', '335749', '336954']):
+# # Plot errors with segmentations
+# fig, axes = plt.subplots(3,4, figsize=(6, 4.5))
+# for i, subject in enumerate(['334264', '335749', '336954']):
 
-    # Load SLANT segmentation
-    slant = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg.nii.gz'))
-    slant_slice = load_slice(slant, view=2)
+#     # Load SLANT segmentation
+#     slant = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg.nii.gz'))
+#     slant_slice = load_slice(slant, view=2)
 
-    # Load niftis
-    truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
-    lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
-    map_both = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_0.005_mask', subject, f't1_map.nii.gz'))
-    map1 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_0.005_mask', subject, f't1_map.nii.gz'))
-    map2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_3_0.005_mask', subject, f't1_map.nii.gz'))
+#     # Load niftis
+#     truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
+#     lut = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_lut_mask', subject, f't1_map.nii.gz'))
+#     map_both = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_all_0.005_mask', subject, f't1_map.nii.gz'))
+#     map1 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_0.005_mask', subject, f't1_map.nii.gz'))
+#     map2 = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_3_0.005_mask', subject, f't1_map.nii.gz'))
     
-    # Error NIFTIs
-    lut_error = nib.Nifti1Image(truth.get_fdata() - lut.get_fdata(), truth.affine)
-    map_both_error = nib.Nifti1Image(truth.get_fdata() - map_both.get_fdata(), truth.affine)
-    map1_error = nib.Nifti1Image(truth.get_fdata() - map1.get_fdata(), truth.affine)
-    map2_error = nib.Nifti1Image(truth.get_fdata() - map2.get_fdata(), truth.affine)
+#     # Error NIFTIs
+#     lut_error = nib.Nifti1Image(truth.get_fdata() - lut.get_fdata(), truth.affine)
+#     map_both_error = nib.Nifti1Image(truth.get_fdata() - map_both.get_fdata(), truth.affine)
+#     map1_error = nib.Nifti1Image(truth.get_fdata() - map1.get_fdata(), truth.affine)
+#     map2_error = nib.Nifti1Image(truth.get_fdata() - map2.get_fdata(), truth.affine)
 
-    # Load slices
-    lut_slice = load_slice(lut_error, view=2)
-    map_both_slice = load_slice(map_both_error, view=2)
-    map1_slice = load_slice(map1_error, view=2)
-    map2_slice = load_slice(map2_error, view=2)
+#     # Load slices
+#     lut_slice = load_slice(lut_error, view=2)
+#     map_both_slice = load_slice(map_both_error, view=2)
+#     map1_slice = load_slice(map1_error, view=2)
+#     map2_slice = load_slice(map2_error, view=2)
 
-    # Plot slices
-    vmin = -3
-    vmax = 3
-    norm = matplotlib.colors.SymLogNorm(
-        linthresh=0.1,
-        linscale=0.2,
-        vmin=vmin,
-        vmax=vmax,
-    )
-    t = axes[i,0].imshow(lut_slice, 'RdBu', norm=norm)
-    axes[i,1].imshow(map1_slice, 'RdBu', norm=norm)
-    axes[i,2].imshow(map2_slice, 'RdBu', norm=norm) 
-    axes[i,3].imshow(map_both_slice, 'RdBu', norm=norm)
+#     # Plot slices
+#     vmin = -3
+#     vmax = 3
+#     norm = matplotlib.colors.SymLogNorm(
+#         linthresh=0.1,
+#         linscale=0.2,
+#         vmin=vmin,
+#         vmax=vmax,
+#     )
+#     t = axes[i,0].imshow(lut_slice, 'RdBu', norm=norm)
+#     axes[i,1].imshow(map1_slice, 'RdBu', norm=norm)
+#     axes[i,2].imshow(map2_slice, 'RdBu', norm=norm) 
+#     axes[i,3].imshow(map_both_slice, 'RdBu', norm=norm)
 
-    xlims = [[48, 207], [48, 207], [48, 207]]
-    ylims = [[43, 225], [43, 235], [25, 235]]
-    for j in range(4):
-        axes[i,j].set_xlim(xlims[i])
-        axes[i,j].set_ylim(ylims[i])
-        axes[i,j].set_xticks([])
-        axes[i,j].set_yticks([])
-        axes[i,j].set_frame_on(False)
+#     xlims = [[48, 207], [48, 207], [48, 207]]
+#     ylims = [[43, 225], [43, 235], [25, 235]]
+#     ylims = [[256-y[1], 256-y[0]] for y in ylims] # account for flip
+#     for j in range(4):
+#         axes[i,j].set_xlim(xlims[i])
+#         axes[i,j].set_ylim(ylims[i])
+#         axes[i,j].set_xticks([])
+#         axes[i,j].set_yticks([])
+#         axes[i,j].set_frame_on(False)
 
-axes[0,0].set_title('Original point\nestimate T1')
-axes[0,1].set_title('MAP T1 with $S_{1,2}$ alone')
-axes[0,2].set_title('MAP T1 with $S_{1,3}$ alone')
-axes[0,3].set_title('MAP T1 with both\n$S_{1,2}$ and $S_{1,3}$')
+# axes[0,0].set_title('Original point\nestimate T1')
+# axes[0,1].set_title('MAP T1 with $S_{1,2}$ alone')
+# axes[0,2].set_title('MAP T1 with $S_{1,3}$ alone')
+# axes[0,3].set_title('MAP T1 with both\n$S_{1,2}$ and $S_{1,3}$')
 
-axes[0,0].set_ylabel('Subject 1')
-axes[1,0].set_ylabel('Subject 2')
-axes[2,0].set_ylabel('Subject 3')
+# axes[0,0].set_ylabel('Subject 1')
+# axes[1,0].set_ylabel('Subject 2')
+# axes[2,0].set_ylabel('Subject 3')
 
 # Add colorbars
-cbar1 = fig.colorbar(t, ax=axes)
-cbar1.ax.set_xlabel('s')
-cbar1.ax.set_ylabel('Error (ground truth - experimental value,\nsymmetric log scale)')
+# cbar1 = fig.colorbar(t, ax=axes)
+# cbar1.ax.set_xlabel('s')
+# cbar1.ax.set_ylabel('Error (ground truth - experimental value,\nsymmetric log scale)')
 
 # Plot WM, GM, other for example subjects
-fig2, axes2 = plt.subplots(3,4, figsize=(6, 4.5))
+vmin = -3
+vmax = 3
+norm = matplotlib.colors.SymLogNorm(
+    linthresh=0.1,
+    linscale=0.2,
+    vmin=vmin,
+    vmax=vmax,
+)
+
+# fig2, axes2 = plt.subplots(3,4, figsize=(6, 4.5))
 for i, subject in enumerate(['334264', '335749', '336954']):
+
+    fig, ax = plt.subplots(1, 5, figsize=(5,1.25), layout='constrained')
 
     # Load SLANT segmentation
     slant_wm = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_wm.nii.gz'))
     slant_gm = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_gm.nii.gz'))
     slant_other = nib.load(os.path.join('/nfs/masi/saundam1/outputs/t1_mapping/slant_mp2rage_nss_0.25_mask', subject, 't1w_seg_other.nii.gz'))
+    
     slant_wm_slice = load_slice(slant_wm, view=2, slice=2)
     slant_gm_slice = load_slice(slant_gm, view=2, slice=2)
     slant_other_slice = load_slice(slant_other, view=2, slice=2)
@@ -98,7 +111,8 @@ for i, subject in enumerate(['334264', '335749', '336954']):
     # Load niftis
     truth = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_truth_mask', subject, f't1_map.nii.gz'))
     map = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 't1_maps_likelihood_s1_2_custom_mask', subject, f't1_map.nii.gz'))
-    
+    std = nib.load(os.path.join(t1_mapping.definitions.OUTPUTS, 'results', 'std_maps_s1_2_0.005_mask', subject, f'std_map.nii.gz'))
+
     # Error NIFTIs
     map_error = nib.Nifti1Image(truth.get_fdata() - map.get_fdata(), truth.affine)
 
@@ -108,42 +122,31 @@ for i, subject in enumerate(['334264', '335749', '336954']):
     map_slice_gm = copy.deepcopy(map_slice)
     map_slice_other = copy.deepcopy(map_slice)
 
+    std_slice = load_slice(std, view=2, slice=2)
+
     map_slice_wm[~wm_mask] = 0
     map_slice_gm[~gm_mask] = 0
     map_slice_other[~other_mask] = 0
 
     # Plot slices
-    t = axes2[i,0].imshow(map_slice_wm, 'RdBu', norm=norm)
-    axes2[i,1].imshow(map_slice_gm, 'RdBu', norm=norm)
-    axes2[i,2].imshow(map_slice_other, 'RdBu', norm=norm)
-    axes2[i,3].imshow(map_slice, 'RdBu', norm=norm)
+    t = ax[0].imshow(map_slice_wm, 'RdBu', norm=norm)
+    ax[1].imshow(map_slice_gm, 'RdBu', norm=norm)
+    ax[2].imshow(map_slice_other, 'RdBu', norm=norm)
+    ax[3].imshow(map_slice, 'RdBu', norm=norm)
+    ax[4].imshow(std_slice, 'gray', vmin=0, vmax=1)
 
     xlims = [[48, 207], [48, 207], [48, 207]]
     ylims = [[43, 225], [43, 235], [25, 235]]
-    for j in range(4):
-        axes2[i,j].set_xlim(xlims[i])
-        axes2[i,j].set_ylim(ylims[i])
-        axes2[i,j].set_xticks([])
-        axes2[i,j].set_yticks([])
-        axes2[i,j].set_frame_on(False)
+    ylims = [[256-y[1], 256-y[0]] for y in ylims] # account for flip
+    for j in range(5):
+        ax[j].set_xlim(xlims[i])
+        ax[j].set_ylim(ylims[i])
+        ax[j].set_xticks([])
+        ax[j].set_yticks([])
+        ax[j].set_frame_on(False)
 
-axes2[0,0].set_title('WM')
-axes2[0,1].set_title('GM')
-axes2[0,2].set_title('Other')
-axes2[0,3].set_title('All')
-
-axes2[0,0].set_ylabel('Subject 1')
-axes2[1,0].set_ylabel('Subject 2')
-axes2[2,0].set_ylabel('Subject 3')
-
-# Add colorbars
-cbar2 = fig2.colorbar(t, ax=axes2)
-cbar2.ax.set_xlabel('s')
-cbar2.ax.set_ylabel('Error (ground truth - experimental value,\nsymmetric log scale)')
-
-if save_fig:
-    fig.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_errors.pdf', dpi=1200)
-    fig2.savefig('/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_errors_seg.pdf', dpi=1200)
+    if save_fig:
+        fig.savefig(f'/home/local/VANDERBILT/saundam1/Pictures/t1_mapping/mrm_figures/qual_error_seg_subj{i}.pdf', dpi=1200)
 
 plt.show()
 
