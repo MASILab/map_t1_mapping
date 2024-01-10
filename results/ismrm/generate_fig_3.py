@@ -12,7 +12,7 @@ subj_lut = t1_mapping.mp2rage.MP2RAGESubject(
     scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
     scan_times=['1010', '3310'],
 )
-t1_lut = subj_lut.t1_map
+t1_lut = subj_lut.t1_map('lut')
 
 subj_like = t1_mapping.mp2rage.MP2RAGESubject(
     subject_id='334264',
@@ -21,7 +21,7 @@ subj_like = t1_mapping.mp2rage.MP2RAGESubject(
     monte_carlo=os.path.join(t1_mapping.definitions.SIMULATION_DATA, 'counts_100M_spacing.npy'), 
     all_inv_combos=False,
 )
-t1_like = subj_like.t1_map
+t1_like = subj_like.t1_map('likelihood')
 
 # Mask by zero values of ground truth
 t1_lut_data = t1_lut.get_fdata()
