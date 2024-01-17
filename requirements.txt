@@ -1,11 +1,10 @@
 # Any version okay
 numpy
 nibabel
-nilearn
 scipy
-sklearn
-matplotlib
+scikit-learn
+pyyaml
+tqdm
 
 # editable installation of local packages
--e /home/local/VANDERBILT/saundam1/Documents/t1_mapping/
-
+-e .

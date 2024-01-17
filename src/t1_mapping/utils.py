@@ -1,13 +1,8 @@
 import numpy as np
 import os
 import nibabel as nib
-import json
-import matplotlib.pyplot as plt
 from typing import TypedDict
-from nibabel.affines import apply_affine
-import t1_mapping.definitions
-from scipy.interpolate import CubicSpline, RegularGridInterpolator
-import itertools
+from scipy.interpolate import RegularGridInterpolator
 
 def gre_signal(T1, TD, TR, flip_angles, n, eff):
     """
@@ -121,9 +116,12 @@ class EquationParameters(TypedDict):
 
 def acq_to_eqn_params(acq_params):
     """
-    Returns the equatio# Pad LUT
-m[0] = -0.5
-m[-1] = 0.5EParameters
+    Returns the equation parameters (TA, TB, TC, ...) given the acquisition parameters
+    (inversion times, flip angles, ...)
+    
+    Parameters
+    _________
+    acq_params : MP2RAGEParameters
         TypedDict with acquisition parameters TR, MP2RAGE_TR, flip_angles, 
         inversion_times, n and eff
 
@@ -218,7 +216,7 @@ def mp2rage_t1w(GRE1, GRE2, robust=False, beta=10):
 
     return MP2RAGE
 
-def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles, n, eff, method='linear', monte_carlo=None, likelihood_thresh=0.5, pairs=None):
+def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles, n, eff, method='point', monte_carlo=None, likelihood_thresh=0.5, pairs=None):
     """
     Returns the values for the T1 map calculated from an MP2RAGE sequence.
 
@@ -243,8 +241,8 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         ints for number before and after center of k-space.
     eff : arraylike
         Inversion efficiency of scanner
-    method : str, default='linear'
-        Method for calculating T1 map. Can be 'linear', 'cubic' or 'likelihood'.
+    method : str, default='point'
+        Method for calculating T1 map. Can be 'point', 'map', or 'likelihood'.
     monte_carlo : str
         If method is 'likelihood', path to counts from Monte Carlo simulation
     likelihood_thresh : float, default=0.5
@@ -257,7 +255,7 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     t1_calc : numpy.ndarray
         T1 map calculated from inputs
     """
-    if method == 'linear':
+    if method == 'point':
         # Calculate T1-weighted image
         t1w = mp2rage_t1w(inv[0], inv[1])
 
@@ -287,24 +285,6 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         t1_calc = np.interp(t1w.flatten(), m, t1, right=0.)
         t1_calc = t1_calc.reshape(t1w.shape)
 
-    elif method == 'cubic':
-        # Calculate T1-weighted image
-        t1w = mp2rage_t1w(inv[0], inv[1])
-
-        # Create LUT
-        LUT = np.hstack((m.reshape(num_points,1), t1_values.reshape(num_points,1)))
-
-        # Sort LUT so values are in numerical order
-        LUT = LUT[LUT[:, 0].argsort()]
-
-        # Create cubic interpolation
-        cs = CubicSpline(LUT[:, 0], LUT[:, 1])
-
-        # Calculate for desired values
-        t1_calc = cs(t1w.flatten())
-        t1_calc = t1_calc.reshape(t1w.shape)
-
-        return t1_calc
     elif method == 'likelihood':
         # Load Monte Carlo simulation file
         if monte_carlo is None:
@@ -339,7 +319,7 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
         # Create grid
         interp = RegularGridInterpolator(tuple(m), values=t1_lut,
-            bounds_error=False, fill_value=0, method='linear')
+            bounds_error=False, fill_value=0, method='point')
 
         # Calculate MP2RAGE images to get values at
         t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -350,6 +330,7 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         # Interpolate along new values
         pts = tuple([t.flatten() for t in t1w])
         t1_calc = interp(pts).reshape(t1w[0].shape)
+
     elif method == 'map':
         # Load Monte Carlo simulation file
         counts = np.load(monte_carlo)
@@ -363,7 +344,7 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
         # Create grid
         interp = RegularGridInterpolator(tuple(m), values=t1_lut,
-            bounds_error=False, fill_value=0, method='linear')
+            bounds_error=False, fill_value=0, method='point')
 
         # Calculate MP2RAGE images to get values at
         t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -374,8 +355,9 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         # Interpolate along new values
         pts = tuple([t.flatten() for t in t1w])
         t1_calc = interp(pts).reshape(t1w[0].shape)
+
     else:
-        raise ValueError("Invalid value for 'method'. Valid values are 'linear', 'cubic', 'map', or 'likelihood'.")
+        raise ValueError("Invalid value for 'method'. Valid values are 'point', 'map', or 'likelihood'.")
 
     return t1_calc
 
@@ -438,7 +420,7 @@ def mp2rage_t1_exp_val(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_ang
 
     # Create grid
     interp = RegularGridInterpolator(tuple(m), values=exp_val,
-        bounds_error=False, fill_value=0, method='linear')
+        bounds_error=False, fill_value=0, method='point')
 
     # Calculate MP2RAGE images to get values at
     t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -514,7 +496,7 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
     # Create grid
     interp = RegularGridInterpolator(tuple(m), values=variance,
-        bounds_error=False, fill_value=0, method='linear')
+        bounds_error=False, fill_value=0, method='point')
 
     # Calculate MP2RAGE images to get values at
     t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]

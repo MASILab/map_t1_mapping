@@ -1,34 +1,7 @@
 import nibabel as nib
-from adam_utils.nifti import plot_nifti
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-# # Load GREs
-# scan_folder = '/nfs/masi/saundam1/outputs/t1_mapping/mp2rage_converted_v2023/334264/401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE'
-# gre1_real = nib.load(os.path.join(scan_folder, '401_real_t1010.nii'))
-# gre1_imag = nib.load(os.path.join(scan_folder, '401_imaginary_t1010.nii'))
-# gre2_real = nib.load(os.path.join(scan_folder, '401_real_t3310.nii'))
-# gre2_imag = nib.load(os.path.join(scan_folder, '401_imaginary_t3310.nii'))
-
-# gre1 = gre1_real.get_fdata() + 1j*gre1_imag.get_fdata()
-# gre2 = gre2_real.get_fdata() + 1j*gre2_imag.get_fdata()
-
-# # Create robust T1-weighted image
-# t1w = np.real(np.conj(gre1)*gre2)/(np.abs(gre1)**2 + np.abs(gre2)**2)
-# mask = nib.load('/nfs/masi/saundam1/outputs/t1_mapping/t1w_strip/334264/mask.nii')
-# denom_masked = (np.abs(gre1)**2 + np.abs(gre2)**2) * mask.get_fdata()
-# beta = np.mean(denom_masked)
-# robust_t1w = (np.real(np.conj(gre1)*gre2) - beta)/(np.abs(gre1)**2 + np.abs(gre2)**2 + 2*beta)
-# robust_t1w += 0.5
-
-# t1w_nifti = nib.Nifti1Image(t1w, affine=gre1_real.affine)
-# robust_t1w_nifti = nib.Nifti1Image(robust_t1w, affine=gre1_real.affine)
-
-# # Save to NIFTI
-# robust_t1w_nifti.to_filename('/nfs/masi/saundam1/outputs/t1_mapping/test/robust_t1w.nii.gz')
-
-# Create MP2RAGE data
 import os
 import t1_mapping
 import nibabel as nib

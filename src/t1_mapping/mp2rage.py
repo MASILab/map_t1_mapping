@@ -1,30 +1,25 @@
 import t1_mapping.utils
-import t1_mapping.definitions
 from functools import cached_property
 import itertools
 import nibabel as nib
 import numpy as np
 import os
 import json
+import yaml
 
 class MP2RAGESubject():
-    def __init__(self, subject_id, scan, scan_times, monte_carlo=None, all_inv_combos=False):
+    def __init__(self, params_path, scan_paths=None, monte_carlo=None):
         """
         Class to store MP2RAGE subject data
 
         Parameters
         ---------
-        subject_id : str
-            Subject number
-        scan : str
-            Full scan name
-        scan_times : list of str
-            List of scan times to load
+        params_path : str
+            Path to parameter YAML fileW
+        scan_paths : list of str
+            List of scan paths to load (real #1, imaginary #1, real #2, imaginary #2, etc.)
         monte_carlo : str
             Monte Carlo simulation counts used for likelihood method
-        all_inv_combos : bool, by default False
-            If True, use all combinations of inversion readouts for calculation 
-            (n choose 2). Otherwise, use sequential pairs (n - 1).
 
         Attributes
         --------
@@ -57,30 +52,20 @@ class MP2RAGESubject():
         pairs : list of tuples
             List of pairs of inversions used to calculated mp2rage and m
         """
-        self.subject_id = subject_id
-        self.scan = scan
-        self.scan_times = scan_times
+        self.scan_paths = scan_paths
         self.monte_carlo = monte_carlo
 
-        # Load dataset paths
-        self.scan_num = self.scan.split('-', 1)[0]
-        self.subject_path = os.path.join(t1_mapping.definitions.DATA, self.subject_id, self.scan)
+        # Load parameters
+        with open(params_path, 'r') as f:
+            self.params = yaml.safe_load(f)
 
         # Create potential T1 values
         self.delta_t1 = 0.05
         self.t1 = np.arange(self.delta_t1, 5 + self.delta_t1, self.delta_t1)
 
-        # Create pairs for inversions
-        if all_inv_combos:
-            self.pairs = list(itertools.combinations(range(len(scan_times)), 2))
-        else:
-            self.pairs = [(0, i+1) for i in range(len(scan_times)-1)]
-
         # Create range of potential MP2RAGE values
         num_points = self.t1.shape[0]
         self.m_ranges = [(-0.5, 0.5) for i in self.pairs]
-        if all_inv_combos:
-            self.m_ranges[-1] = (0.25, 0.5)
 
         self.m = [np.linspace(m[0], m[1], 100) for m in self.m_ranges]
         self.delta_m = [(m[1]-m[0])/(num_points-1) for m in self.m_ranges]
@@ -88,30 +73,24 @@ class MP2RAGESubject():
     @cached_property
     def inv(self):
         inv = []
-        for t in self.scan_times:
-            # Load NIFTI
-            inv_real = nib.load(os.path.join(self.subject_path, f'{self.scan_num}_real_t{t}.nii'))
-            inv_imag = nib.load(os.path.join(self.subject_path, f'{self.scan_num}_imaginary_t{t}.nii'))
+        for i in range(len(self.scan_paths)):
+            # Real if even, imaginary if odd
+import itertools
+            if i % 2 == 0:
+                # Load NIFTI
+                inv_real = nib.load(self.scan_paths[i])
+                inv_imag = nib.load(self.scan_paths[i+1])
 
-            # Get data from NIFTI
-            inv_real_data = inv_real.get_fdata()
-            inv_imag_data = inv_imag.get_fdata()
+                # Get data from NIFTI
+                inv_real_data = inv_real.get_fdata()
+                inv_imag_data = inv_imag.get_fdata()
 
-            # Create combined complex data
-            inv_data = inv_real_data + 1j*inv_imag_data
+                # Create combined complex data
+                inv_data = inv_real_data + 1j*inv_imag_data
 
-            # Create NIFTI
-            inv.append(nib.nifti1.Nifti1Image(inv_data, inv_real.affine))
+                # Create NIFTI
+                inv.append(nib.nifti1.Nifti1Image(inv_data, inv_real.affine))
         return inv
-    
-    @cached_property
-    def inv_json(self):
-        inv_json = []
-        # Load JSON
-        for t in self.scan_times:
-            with open(os.path.join(self.subject_path, f'{self.scan_num}_t{t}.json'), 'r') as f:
-                inv_json.append(json.load(f))
-        return inv_json
 
     @property
     def affine(self):
@@ -119,19 +98,13 @@ class MP2RAGESubject():
 
     @property
     def acq_params(self):
-        # Load acquisition parameters
-        params : t1_mapping.utils.MP2RAGEParameters = {
-            "MP2RAGE_TR": 8.25,
-            "TR": self.inv_json[0]["RepetitionTime"],
-            "flip_angles": [i['FlipAngle'] for i in self.inv_json],
-            "inversion_times": [i['TriggerDelayTime']/1000 for i in self.inv_json],
-            # "TR": 0.006,
-            # "flip_angles": [4.0, 4.0],
-            # "inversion_times": [1010/1000, 3310/1000],
-            "n": [225],
-            "eff": 0.84,
-        }
-        return params
+        # Load acquisition parameters from YAML
+        params = self.params.copy()
+        params.pop('noise_std')
+        params.pop('num_trials')
+        params.pop('likelihood_threshold')
+        acq_params = t1_mapping.utils.MP2RAGEParameters(**params)
+        return acq_params
 
     @property
     def eqn_params(self):
@@ -142,8 +115,9 @@ class MP2RAGESubject():
         t1w_array = t1_mapping.utils.mp2rage_t1w(self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64))
         return nib.nifti1.Nifti1Image(t1w_array, self.affine)
     
-    def t1_map(self, method, thresh=0.5):
-        if method == 'linear' or method == 'lut':
+    def t1_map(self, method):
+        thresh = self.params['likelihood_threshold']
+        if method == 'point':
             t1_map = t1_mapping.utils.mp2rage_t1_map(
                 t1=self.t1, 
                 delta_t1=self.delta_t1,
@@ -152,7 +126,7 @@ class MP2RAGESubject():
                 delta_m=self.delta_m,
                 inv=[inv.get_fdata(dtype=np.complex64) for inv in self.inv],
                 **self.eqn_params,
-                method='linear')
+                method='point')
         elif method == 'likelihood':
             t1_map = t1_mapping.utils.mp2rage_t1_map(
                 t1=self.t1,
@@ -226,8 +200,3 @@ class MP2RAGESubject():
         t1_var_data = self.t1_var.get_fdata()
         t1_std_data = np.sqrt(t1_var_data)
         return nib.Nifti1Image(t1_std_data, self.affine)
-    
-    # @property
-    # def m(self):
-    #     m = [np.arange(r[0], r[1], self.delta_m[i]) for i, r in enumerate(self.m_ranges)]
-    #     return m
