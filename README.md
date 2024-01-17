@@ -1,2 +1,2 @@
-# T1 Mapping
-Comparison of quantitative T1 mapping with MP2RAGE
+# MAP T1 Mapping
+Maximum a posteriori (MAP) quantitative T1 mapping
