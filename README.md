@@ -1,7 +1,7 @@
 # MAP T1 Mapping
 Maximum a posteriori (MAP) quantitative T1 mapping
 
-To use this repository as a Python package called "t1_mapping", do `pip install -e .` in this folder.
+To use this repository as a Python package called "t1_mapping", do `pip install -e .` in this folder. Alternatively, see below for instructions for using the Singularity container.
 
 ## Preparing your data 
 You must create an input folder with the following structure:
@@ -72,7 +72,7 @@ python create_image.py --params_path params.yml --input_folder inputs/ --num_pro
 ```
 
 ## Singularity container
-As an alternative to the repository, you can use the Singularity image. You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
+As an alternative to the repository, you can use the Singularity image: [https://www.dropbox.com/scl/fi/shxienqokb4ud661fwf40/map_t1_mapping.sif?rlkey=x2lcyp0wlxe0fvfvo2rm02gwl&dl=0](https://www.dropbox.com/scl/fi/shxienqokb4ud661fwf40/map_t1_mapping.sif?rlkey=x2lcyp0wlxe0fvfvo2rm02gwl&dl=0). You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
 
 ```bash
 # Test Monte Carlo simulation
@@ -89,7 +89,7 @@ singularity exec \
     --noise_std 0.005
 
 # Test image creation using Monte Carlo
-singularity exec --contain --cleanenv \
+singularity exec \
     -B /home/.../inputs:/inputs \
     -B /home/.../outputs:/outputs \
     -B /home/.../sim_outputs:/sim_outputs \
