@@ -3,11 +3,11 @@ MP2RAGE_TR: 8.25 # seconds
 flip_angles: # degrees
   - 4
   - 4
-  - 4
+  # - 4
 inversion_times: # seconds
   - 1.010
   - 3.310  
-  - 5.610  
+  # - 5.610  
 n: # can also be a list of before and after center of k-space
   - 225
 eff: 0.84

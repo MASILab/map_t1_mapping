@@ -3,6 +3,7 @@ import os
 import nibabel as nib
 from typing import TypedDict
 from scipy.interpolate import RegularGridInterpolator
+import re
 
 def gre_signal(T1, TD, TR, flip_angles, n, eff):
     """
@@ -296,7 +297,8 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
         n_readouts = len(inv)
 
         # Calculate likelihoods
-        L_gauss = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+        with np.errstate(divide='ignore', invalid='ignore'):
+            L_gauss = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
         L_gauss = np.nan_to_num(L_gauss, nan=0)
 
         # Maximum likelihood of gaussian
@@ -319,7 +321,7 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
         # Create grid
         interp = RegularGridInterpolator(tuple(m), values=t1_lut,
-            bounds_error=False, fill_value=0, method='point')
+            bounds_error=False, fill_value=0, method='linear')
 
         # Calculate MP2RAGE images to get values at
         t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -334,7 +336,8 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     elif method == 'map':
         # Load Monte Carlo simulation file
         counts = np.load(monte_carlo)
-        posterior = counts / np.sum(counts*delta_t1, axis=-1)[...,np.newaxis]
+        with np.errstate(divide='ignore', invalid='ignore'):
+            posterior = counts / np.sum(counts*delta_t1, axis=-1)[...,np.newaxis]
 
         # For each M, find the T1 with the highest probability
         max_inds = np.argmax(posterior, axis=-1)
@@ -344,7 +347,7 @@ def mp2rage_t1_map(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
         # Create grid
         interp = RegularGridInterpolator(tuple(m), values=t1_lut,
-            bounds_error=False, fill_value=0, method='point')
+            bounds_error=False, fill_value=0, method='linear')
 
         # Calculate MP2RAGE images to get values at
         t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -407,11 +410,13 @@ def mp2rage_t1_exp_val(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_ang
     n_readouts = len(inv)
 
     # Calculate likelihood
-    likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    with np.errstate(divide='ignore', invalid='ignore'):
+        likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
     likelihood = np.nan_to_num(likelihood, nan=0)
 
     # Calculate posterior
-    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
     posterior = np.nan_to_num(posterior, nan=0)
 
     # Expected value
@@ -420,7 +425,7 @@ def mp2rage_t1_exp_val(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_ang
 
     # Create grid
     interp = RegularGridInterpolator(tuple(m), values=exp_val,
-        bounds_error=False, fill_value=0, method='point')
+        bounds_error=False, fill_value=0, method='linear')
 
     # Calculate MP2RAGE images to get values at
     t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -480,11 +485,13 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     n_readouts = len(inv)
 
     # Calculate likelihood
-    likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
+    with np.errstate(divide='ignore', invalid='ignore'):
+        likelihood = counts / np.sum(counts * np.prod(delta_m), axis=tuple(range(n_pairs)))
     likelihood = np.nan_to_num(likelihood, nan=0)
 
     # Calculate posterior
-    posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
+    with np.errstate(divide='ignore', invalid='ignore'):
+        posterior = likelihood / np.sum(delta_t1*likelihood, axis=-1)[...,np.newaxis]
     posterior = np.nan_to_num(posterior, nan=0)
 
     # Expected value
@@ -496,7 +503,7 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
 
     # Create grid
     interp = RegularGridInterpolator(tuple(m), values=variance,
-        bounds_error=False, fill_value=0, method='point')
+        bounds_error=False, fill_value=0, method='linear')
 
     # Calculate MP2RAGE images to get values at
     t1w = [mp2rage_t1w(inv[i[0]], inv[i[1]]) for i in pairs]
@@ -509,3 +516,10 @@ def mp2rage_t1_var(t1, delta_t1, m, m_ranges, delta_m, inv, TD, TR, flip_angles,
     t1_var = interp(pts).reshape(t1w[0].shape)
 
     return t1_var
+
+# Custom sorting function
+def sort_key(file_name):
+    match = re.search(r't(\d+)\.nii(\.gz)?', file_name)
+    if match:
+        return int(match.group(1))
+    return 0

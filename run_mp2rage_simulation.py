@@ -16,7 +16,6 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-
 # Define a function to accumulate sums into the shared counts matrix for a batch of trials
 def accumulate_sums(iteration_range, m_ranges):
     counts = np.zeros(shape)
@@ -36,23 +35,17 @@ def accumulate_sums(iteration_range, m_ranges):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run Monte Carlo simulation to get MP2RAGE distribution")
 
-    parser.add_argument("--output_path", type=str, help="Path to the output file")
+    parser.add_argument("--params_path", type=str, help="Path to the parameters YAML file")
+    parser.add_argument("--sim_output_path", type=str, help="Path to the simulation output file (ending in .npy)")
     parser.add_argument("--num_trials", type=int, help="Number of trials")
-    parser.add_argument("--num_process", type=int, help="Number of CPUs to use")
+    parser.add_argument("--num_process", type=int, help="Number of processes to use")
     parser.add_argument("--noise_std", type=float, default=0.005, help="Noise standard deviation")
-    parser.add_argument("--times", nargs='+', type=int, help="List of inversion times to use (ex. --times 1 3, --times 1 2 3)")
 
     args = parser.parse_args()
 
     # Load subject
-    scan_times = ['1010', '3310', '5610']
-    times = [scan_times[t-1] for t in args.times]
-    print(times)
     subj = t1_mapping.mp2rage.MP2RAGESubject(
-        subject_id='334264',
-        scan='401-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE-x-WIPMP2RAGE_0p7mm_1sTI_best_oneSENSE',
-        scan_times=times,
-        all_inv_combos=args.all_inv_combos
+        params_path=args.params_path
     )
 
     # Calculate what values would be produced using these parameters
@@ -61,11 +54,10 @@ if __name__ == '__main__':
     # Now simulate with noise
     shape = tuple([m.shape[0] for m in subj.m])
     shape = shape + (subj.t1.shape[0],)
-    n_inv = len(subj.scan_times)
+    n_inv = len(subj.params['inversion_times'])
 
     # Create normal distribution
-    sd = args.noise_std
-    print(subj.pairs)
+    sd = subj.params['noise_std']
 
     num_trials = args.num_trials
     num_processes = args.num_process
@@ -73,7 +65,7 @@ if __name__ == '__main__':
 
     iterable_func = partial(accumulate_sums, m_ranges=subj.m_ranges)
     
-    print(f'Simulating {len(subj.pairs)} MP2RAGE images for {num_trials} trials using {num_processes} processes and {sd} noise STD')
+    print(f'Simulating {len(subj.params["inversion_times"])} MP2RAGE images for {num_trials} trials using {num_processes} processes and {sd} noise STD')
     ranges = [(i, i + iter_per_process) for i in range(0, num_trials, iter_per_process)]
     counts = np.zeros(shape)
     with Pool(processes=num_processes) as p:
@@ -81,5 +73,7 @@ if __name__ == '__main__':
             counts += x
     
     # Save PDFs to file for later use
-    with open(args.output_path, 'wb') as f:
+    output_folder = os.path.dirname(args.sim_output_path)
+    os.makedirs(output_folder, exist_ok=True)
+    with open(args.sim_output_path, 'wb') as f:
         np.save(f, counts)

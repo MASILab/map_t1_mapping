@@ -5,6 +5,7 @@ scipy
 scikit-learn
 pyyaml
 tqdm
+joblib
 
 # editable installation of local packages
 -e .

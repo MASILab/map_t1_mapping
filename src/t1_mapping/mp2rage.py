@@ -6,9 +6,11 @@ import numpy as np
 import os
 import json
 import yaml
+import glob
+import re
 
 class MP2RAGESubject():
-    def __init__(self, params_path, scan_paths=None, monte_carlo=None):
+    def __init__(self, params_path, scan_folder=None, monte_carlo=None):
         """
         Class to store MP2RAGE subject data
 
@@ -16,8 +18,8 @@ class MP2RAGESubject():
         ---------
         params_path : str
             Path to parameter YAML fileW
-        scan_paths : list of str
-            List of scan paths to load (real #1, imaginary #1, real #2, imaginary #2, etc.)
+        scan_folder : str
+            Path to folder containing scans ("*_real_tXXXX_*.nii*", "*_imaginary_tYYYY_*.nii*")
         monte_carlo : str
             Monte Carlo simulation counts used for likelihood method
 
@@ -31,6 +33,8 @@ class MP2RAGESubject():
             Affine transformation for subject position
         t1w : nibabel.Nifti1Image
             T1-weighted MP2RAGE image
+        robust_t1w : nibabel.Nifti1Image
+            Robust T1-weighted MP2RAGE image using 0.25 * mean value of T1w denominator for beta, scaled from 0 to 1
         t1_map : nibabel.Nifti1Image
             Quantitative T1 map
         mp2rage : list of nibabel.Nifti1Image
@@ -52,12 +56,15 @@ class MP2RAGESubject():
         pairs : list of tuples
             List of pairs of inversions used to calculated mp2rage and m
         """
-        self.scan_paths = scan_paths
+        self.scan_folder = scan_folder
         self.monte_carlo = monte_carlo
 
         # Load parameters
         with open(params_path, 'r') as f:
             self.params = yaml.safe_load(f)
+
+        # Create pairs of images to use
+        self.pairs = [(0, i+1) for i in range(len(self.params['inversion_times'])-1)]
 
         # Create potential T1 values
         self.delta_t1 = 0.05
@@ -73,23 +80,18 @@ class MP2RAGESubject():
     @cached_property
     def inv(self):
         inv = []
-        for i in range(len(self.scan_paths)):
-            # Real if even, imaginary if odd
-import itertools
-            if i % 2 == 0:
-                # Load NIFTI
-                inv_real = nib.load(self.scan_paths[i])
-                inv_imag = nib.load(self.scan_paths[i+1])
 
-                # Get data from NIFTI
-                inv_real_data = inv_real.get_fdata()
-                inv_imag_data = inv_imag.get_fdata()
+        # Get real/imaginary files
+        real_files = sorted(glob.glob(os.path.join(self.scan_folder, '*_real_t*.nii*')), key=t1_mapping.utils.sort_key)
+        imag_files = sorted(glob.glob(os.path.join(self.scan_folder, '*_imaginary_t*.nii*')), key=t1_mapping.utils.sort_key)
 
-                # Create combined complex data
-                inv_data = inv_real_data + 1j*inv_imag_data
+        # Load files
+        for real_file, imag_file in zip(real_files, imag_files):
+            inv_real = nib.load(real_file)
+            inv_imag = nib.load(imag_file)
+            inv_data = inv_real.get_fdata() + 1j * inv_imag.get_fdata()
+            inv.append(nib.nifti1.Nifti1Image(inv_data, inv_real.affine))
 
-                # Create NIFTI
-                inv.append(nib.nifti1.Nifti1Image(inv_data, inv_real.affine))
         return inv
 
     @property
@@ -114,6 +116,21 @@ import itertools
     def t1w(self):
         t1w_array = t1_mapping.utils.mp2rage_t1w(self.inv[0].get_fdata(dtype=np.complex64), self.inv[1].get_fdata(dtype=np.complex64))
         return nib.nifti1.Nifti1Image(t1w_array, self.affine)
+
+    @cached_property
+    def robust_t1w(self):
+        gre1 = subj.inv[0].get_fdata(dtype=np.complex64)
+        gre2 = subj.inv[1].get_fdata(dtype=np.complex64)
+        denom = np.abs(gre1)**2 + np.abs(gre2)**2
+        beta = 0.25*np.mean(denom)
+        robust_t1w_array = t1_mapping.utils.mp2rage_t1w(
+            self.inv[0].get_fdata(dtype=np.complex64),
+            self.inv[1].get_fdata(dtype=np.complex64),
+            robust=True, 
+            beta=beta
+            )
+        robust_t1w_array += 0.5
+        return nib.nifti1.Nifti1Image(robust_1w_array, self.affine)
     
     def t1_map(self, method):
         thresh = self.params['likelihood_threshold']
