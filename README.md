@@ -24,8 +24,9 @@ input_folder/
             ...
 ```
 
-The names of the folders can vary, but the structure must be the same. XXXX and YYYY are the inversion times in ms and are used to order the images correctly. You should also create a YAML file that contains the acquisition parameters:
+The names of the folders can vary, but the structure must be the same. XXXX and YYYY are the inversion times in ms and are used to order the images correctly. You should also create a YAML file that contains the acquisition parameters.
 
+params.yml:
 ```YAML
 TR: 0.006  # Repitition time of the gradient echo readout in s
 MP2RAGE_TR: 8.25 # Time between inversion pulses in s
