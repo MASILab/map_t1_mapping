@@ -166,3 +166,6 @@ cython_debug/
 
 # Ignore NFS files
 .nfs*
+inputs/
+outputs/
+sim_outputs/
