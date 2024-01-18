@@ -77,9 +77,10 @@ if __name__ == '__main__':
     scan_paths = []
     for subject in subjects:
         subject_path = os.path.join(input_folder, subject)
-        scans = os.listdir(subject_path)
-        for scan in scans:
-            scan_paths.append(os.path.join(subject_path, scan))
+        if os.path.isdir(subject_path):
+            scans = os.listdir(subject_path)
+            for scan in scans:
+                scan_paths.append(os.path.join(subject_path, scan))
     
     if num_process == 1:
         [generate_map(scan_folder, output_folder, params_path, img_type, monte_carlo_path) for scan_folder in tqdm(scan_paths)]

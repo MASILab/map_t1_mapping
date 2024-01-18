@@ -119,8 +119,8 @@ class MP2RAGESubject():
 
     @cached_property
     def robust_t1w(self):
-        gre1 = subj.inv[0].get_fdata(dtype=np.complex64)
-        gre2 = subj.inv[1].get_fdata(dtype=np.complex64)
+        gre1 = self.inv[0].get_fdata(dtype=np.complex64)
+        gre2 = self.inv[1].get_fdata(dtype=np.complex64)
         denom = np.abs(gre1)**2 + np.abs(gre2)**2
         beta = 0.25*np.mean(denom)
         robust_t1w_array = t1_mapping.utils.mp2rage_t1w(
@@ -128,9 +128,9 @@ class MP2RAGESubject():
             self.inv[1].get_fdata(dtype=np.complex64),
             robust=True, 
             beta=beta
-            )
+        )
         robust_t1w_array += 0.5
-        return nib.nifti1.Nifti1Image(robust_1w_array, self.affine)
+        return nib.nifti1.Nifti1Image(robust_t1w_array, self.affine)
     
     def t1_map(self, method):
         thresh = self.params['likelihood_threshold']

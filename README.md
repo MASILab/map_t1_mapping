@@ -71,3 +71,34 @@ Note: * requires you to run a Monte Carlo simulation first.
 python create_image.py --params_path params.yml --input_folder inputs/ --num_process 1 --image_type map --monte_carlo_path sim_outputs/counts_1M_0.005.npy --output_folder outputs/
 ```
 
+## Singularity container
+As an alternative to the repository, you can use the Singularity image. You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
+
+```bash
+# Test Monte Carlo simulation
+singularity exec \
+    -B /home/.../inputs:/inputs \
+    -B /home/.../outputs:/outputs \
+    -B /home/.../sim_outputs:/sim_outputs \
+    map_t1_mapping.sif \
+    python /code/run_mp2rage_simulation.py \
+    --params_path /inputs/params.yml \
+    --sim_output_path /sim_outputs/monte_carlo_test.npy \
+    --num_trials 1000000 \
+    --num_process 15 \
+    --noise_std 0.005
+
+# Test image creation using Monte Carlo
+singularity exec --contain --cleanenv \
+    -B /home/.../inputs:/inputs \
+    -B /home/.../outputs:/outputs \
+    -B /home/.../sim_outputs:/sim_outputs \
+    map_t1_mapping.sif \
+    python /code/create_image.py \
+    --params_path /inputs/params.yml \
+    --input_folder /inputs \
+    --output_folder /outputs \
+    --num_process 15 \
+    --image_type likelihood \
+    --monte_carlo_path /sim_outputs/monte_carlo_test.npy```
+
