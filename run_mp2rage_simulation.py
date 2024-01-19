@@ -57,7 +57,7 @@ if __name__ == '__main__':
     n_inv = len(subj.params['inversion_times'])
 
     # Create normal distribution
-    sd = subj.params['noise_std']
+    sd = args.noise_std
 
     num_trials = args.num_trials
     num_processes = args.num_process

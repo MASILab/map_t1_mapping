@@ -72,6 +72,8 @@ if __name__ == '__main__':
     img_type = args.image_type
     monte_carlo_path = args.monte_carlo_path
 
+    print(f'Creating {img_type} images...')
+
     # Create list of subjects and scans in subject folders
     subjects = os.listdir(input_folder)
     scan_paths = []

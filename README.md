@@ -41,8 +41,6 @@ inversion_times: # Time from inversion pulse to middle of each gradient echo rea
 n: # Number of pulses within each gradient echo readout. List containing 1 int or 2 ints for number before and after center of k-space.
   - 225
 eff: 0.84 # Inversion pulse efficiency of scanner
-noise_std: 0.005 # Standard deviation of noise for Monte Carlo simulation
-num_trials: 100000000 # Number of trials for Monte Carlo simulation
 likelihood_threshold: 0.5 # Threshold for relative likelihood for likelihood method of T1 mapping
 ```
 
@@ -52,7 +50,7 @@ Note you must have the same number of flip angles and inversion times - it shoul
 To create T1 maps with method likelihood or map, or to create expected value, standard deviation or variance maps, you need to first run a Monte Carlo simulation. See `python run_mp2rage_simulation.py --help`.
 
 ```bash
-python run_mp2rage_simulation.py --params_path params.yml --sim_output_path sim_outputs/counts_1M_0.005.npy --num_trials 1000000 --num_process 15 --noise_std 0.005
+python run_mp2rage_simulation.py --params_path inputs/params.yml --sim_output_path sim_outputs/counts_1M_0.005.npy --num_trials 1000000 --num_process 15 --noise_std 0.005
 ```
 
 ## Creating the images
@@ -69,11 +67,11 @@ See `python create_image.py --help`. The image type can be any of the following:
 Note: * requires you to run a Monte Carlo simulation first.
 
 ```bash
-python create_image.py --params_path params.yml --input_folder inputs/ --num_process 1 --image_type map --monte_carlo_path sim_outputs/counts_1M_0.005.npy --output_folder outputs/
+python create_image.py --params_path inputs/params.yml --input_folder inputs/ --num_process 1 --image_type likelihood --monte_carlo_path sim_outputs/counts_1M_0.005.npy --output_folder outputs/
 ```
 
 ## Singularity container
-As an alternative to the repository, you can use the Singularity image: [https://www.dropbox.com/scl/fi/shxienqokb4ud661fwf40/map_t1_mapping.sif?rlkey=x2lcyp0wlxe0fvfvo2rm02gwl&dl=0](https://www.dropbox.com/scl/fi/shxienqokb4ud661fwf40/map_t1_mapping.sif?rlkey=x2lcyp0wlxe0fvfvo2rm02gwl&dl=0). You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
+As an alternative to the repository, you can use the Singularity image: [https://www.dropbox.com/scl/fi/79nhy31te6m7okywhk8o8/map_t1_mapping.sif?rlkey=upa503lbn31sx4bszjkhz2mfg&dl=0](https://www.dropbox.com/scl/fi/79nhy31te6m7okywhk8o8/map_t1_mapping.sif?rlkey=upa503lbn31sx4bszjkhz2mfg&dl=0). You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
 
 ```bash
 # Test Monte Carlo simulation

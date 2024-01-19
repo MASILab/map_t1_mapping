@@ -17,7 +17,7 @@ class MP2RAGESubject():
         Parameters
         ---------
         params_path : str
-            Path to parameter YAML fileW
+            Path to parameter YAML file
         scan_folder : str
             Path to folder containing scans ("*_real_tXXXX_*.nii*", "*_imaginary_tYYYY_*.nii*")
         monte_carlo : str
@@ -102,8 +102,6 @@ class MP2RAGESubject():
     def acq_params(self):
         # Load acquisition parameters from YAML
         params = self.params.copy()
-        params.pop('noise_std')
-        params.pop('num_trials')
         params.pop('likelihood_threshold')
         acq_params = t1_mapping.utils.MP2RAGEParameters(**params)
         return acq_params
