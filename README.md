@@ -71,11 +71,12 @@ python create_image.py --params_path inputs/params.yml --input_folder inputs/ --
 ```
 
 ## Singularity container
-As an alternative to the repository, you can use the Singularity image: [https://www.dropbox.com/scl/fi/79nhy31te6m7okywhk8o8/map_t1_mapping.sif?rlkey=upa503lbn31sx4bszjkhz2mfg&dl=0](https://www.dropbox.com/scl/fi/79nhy31te6m7okywhk8o8/map_t1_mapping.sif?rlkey=upa503lbn31sx4bszjkhz2mfg&dl=0). You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
+As an alternative to the repository, you can use the Singularity image: [https://doi.org/10.5281/zenodo.15306164](https://doi.org/10.5281/zenodo.15306164). You must bind the /inputs, /outputs, and /sim_outputs when using the container. The code to run is located in /code. For example:
 
 ```bash
 # Test Monte Carlo simulation
 singularity exec \
+    -e --contain \
     -B /home/.../inputs:/inputs \
     -B /home/.../outputs:/outputs \
     -B /home/.../sim_outputs:/sim_outputs \
@@ -89,6 +90,7 @@ singularity exec \
 
 # Test image creation using Monte Carlo
 singularity exec \
+    -e --contain \
     -B /home/.../inputs:/inputs \
     -B /home/.../outputs:/outputs \
     -B /home/.../sim_outputs:/sim_outputs \
@@ -99,5 +101,10 @@ singularity exec \
     --output_folder /outputs \
     --num_process 15 \
     --image_type likelihood \
-    --monte_carlo_path /sim_outputs/monte_carlo_test.npy```
+    --monte_carlo_path /sim_outputs/monte_carlo_test.npy
+```
 
+## Citation
+If you use this code, please cite the following:
+
+> Adam M. Saunders, Michael E. Kim, Chenyu Gao, Lucas W. Remedios, Aravind R. Krishnan, Kurt G. Schilling, Kristin P. O'Grady, Seth A. Smith, and Bennett A. Landman. Comparison and calibration of MP2RAGE quantitative T1 values to multi-TI inversion recovery T1 values. Magnetic Resonance Imaging, 2025;117:110322. https://doi.org/10.1016/j.mri.2025.110322
